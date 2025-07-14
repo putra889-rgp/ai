@@ -1,80 +1,82 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PUTRAXYOFFICIAL AI v1</title>
+  <meta charset="UTF-8">
+  <title>Gemini Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
-      background-color: #0d0d0d;
-      color: #fff;
-      font-family: monospace;
       margin: 0;
+      background-color: #111;
+      font-family: 'Arial', sans-serif;
+      color: #fff;
+    }
+
+    #chatbox {
+      height: 90vh;
+      overflow-y: auto;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      gap: 10px;
     }
-    header {
-      background: #111;
-      padding: 15px;
-      text-align: center;
-      font-size: 22px;
-      color: #00ff88;
-    }
-    #chat-box {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
+
     .msg {
-      margin-bottom: 12px;
-      padding: 10px;
-      border-radius: 5px;
       max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 15px;
+      line-height: 1.4em;
+      white-space: pre-wrap;
     }
+
     .user {
-      background-color: #1a1aff;
-      margin-left: auto;
-      text-align: right;
+      background-color: #056162;
+      align-self: flex-end;
+      border-bottom-right-radius: 0;
     }
+
     .bot {
-      background-color: #222;
-      margin-right: auto;
-      text-align: left;
+      background-color: #2a2f32;
+      align-self: flex-start;
+      border-bottom-left-radius: 0;
     }
-    footer {
-      background: #111;
+
+    #input-area {
       display: flex;
-      padding: 12px;
-    }
-    input, button {
+      height: 10vh;
       padding: 10px;
-      border-radius: 5px;
-      border: none;
-      font-family: monospace;
+      background-color: #202c33;
     }
-    input {
+
+    #input-area input {
       flex: 1;
-      background: #333;
-      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 15px;
+      font-size: 16px;
+      outline: none;
     }
-    button {
+
+    #input-area button {
       margin-left: 10px;
-      background: #00ff88;
-      color: black;
+      background-color: #25D366;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 50%;
+      font-size: 18px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <header>PUTRAXYOFFICIAL AI v1 (Online ChatGPT)</header>
 
-  <div id="chat-box"></div>
+  <div id="chatbox"></div>
 
-  <footer>
-    <input id="input" placeholder="Tanyakan sesuatu..." />
-    <button onclick="sendMessage()">Kirim</button>
-  </footer>
+  <div id="input-area">
+    <input type="text" id="prompt" placeholder="Ketik pesan..." />
+    <button onclick="sendMessage()">➤</button>
+  </div>
 
   <script>
     const API_KEY = "AIzaSyAR8Xe-wWcleF0LN0HJLqS8yciiMmpb94Q";
