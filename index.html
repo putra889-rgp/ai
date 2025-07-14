@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PUTRAXYOFFICIAL AI v1</title>
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #fff;
+      font-family: monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #111;
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+      color: #00ff88;
+    }
+    #chat-box {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .msg {
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 80%;
+    }
+    .user {
+      background-color: #1a1aff;
+      margin-left: auto;
+      text-align: right;
+    }
+    .bot {
+      background-color: #222;
+      margin-right: auto;
+      text-align: left;
+    }
+    footer {
+      background: #111;
+      display: flex;
+      padding: 12px;
+    }
+    input, button {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-family: monospace;
+    }
+    input {
+      flex: 1;
+      background: #333;
+      color: #fff;
+    }
+    button {
+      margin-left: 10px;
+      background: #00ff88;
+      color: black;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>PUTRAXYOFFICIAL AI v1 (Online ChatGPT)</header>
+
+  <div id="chat-box"></div>
+
+  <footer>
+    <input id="input" placeholder="Tanyakan sesuatu..." />
+    <button onclick="sendMessage()">Kirim</button>
+  </footer>
+
+  <script>
+    const API_KEY = "AIzaSyAR8Xe-wWcleF0LN0HJLqS8yciiMmpb94Q";
+    const chatbox = document.getElementById("chatbox");
+
+    function addMessage(text, type) {
+      const msg = document.createElement("div");
+      msg.className = "msg " + type;
+      msg.textContent = text;
+      chatbox.appendChild(msg);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const promptInput = document.getElementById("prompt");
+      const userText = promptInput.value.trim();
+      if (!userText) return;
+
+      addMessage(userText, "user");
+      promptInput.value = "";
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+
+      const payload = {
+        contents: [{
+          parts: [{ text: userText }]
+        }]
+      };
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada jawaban.";
+        addMessage(reply, "bot");
+
+      } catch (err) {
+        console.error("Error:", err);
+        addMessage("Terjadi kesalahan saat menghubungi Gemini API.", "bot");
+      }
+    }
+  </script>
+</body>
+</html>
