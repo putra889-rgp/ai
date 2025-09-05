@@ -2,197 +2,184 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Putra Tools</title>
+  <title>Owner & Member Panel</title>
   <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #0d1117;
-      color: #eee;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .card {
-      background: #161b22;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      width: 350px;
-      text-align: center;
-      display: none;
-      animation: fadeIn .4s ease;
-    }
-    .card.active { display: block; }
-    input, button {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: none;
-    }
-    input { background: #0d1117; color: #eee; border: 1px solid #333; }
-    button { background: #238636; color: #fff; cursor: pointer; font-weight: bold; }
-    button:hover { background: #2ea043; }
-    h2 { margin-bottom: 15px; }
-    pre {
-      text-align: left;
-      white-space: pre-wrap;
-      background: #0d1117;
-      color: #eee;
-      padding: 10px;
-      border-radius: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+    body { font-family: Arial, sans-serif; background:#0d1117; color:#c9d1d9; padding:20px; }
+    h1,h2 { color:#00ffcc; }
+    .box { background:#161b22; padding:15px; border-radius:10px; margin:15px 0; }
+    input,button { padding:10px; border-radius:8px; border:none; margin:5px 0; }
+    button { background:#00ffcc; color:#111; cursor:pointer; font-weight:bold; }
+    pre { background:#111; padding:10px; border-radius:8px; white-space:pre-wrap; }
   </style>
 </head>
 <body>
+  <h1>🔑 Login System</h1>
+  
   <!-- Login -->
-  <div id="loginCard" class="card active">
-    <h2>🔑 Login</h2>
+  <div class="box" id="loginBox">
+    <h2>Login</h2>
     <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
+    <input type="password" id="password" placeholder="Password / Token"><br>
     <button onclick="login()">Login</button>
   </div>
 
-  <!-- Owner Dashboard -->
-  <div id="ownerCard" class="card">
-    <h2>👑 Owner Dashboard</h2>
-    <button onclick="generateToken()">Generate Token Member</button>
-    <p id="tokenResult"></p>
-    <button onclick="showCard('trackerCard')">Tracker Link Generator</button>
-    <button onclick="showCard('nikCard')">Lookup NIK</button>
-    <button onclick="showCard('noCard')">Cek Nomor</button>
-    <button onclick="logout()">Logout</button>
+  <!-- Owner Panel -->
+  <div class="box" id="ownerPanel" style="display:none;">
+    <h2>Owner Panel</h2>
+    <button onclick="generateToken()">Generate Member Token</button>
+    <pre id="tokenResult"></pre>
+
+    <h3>Lookup NIK</h3>
+    <input type="text" id="nikInputO" placeholder="NIK 16 digit">
+    <button onclick="lookupNik('O')">Cari</button>
+    <pre id="nikResultO"></pre>
+
+    <h3>Cek Nomor HP</h3>
+    <input type="text" id="noInputO" placeholder="Nomor HP">
+    <button onclick="cekNomor('O')">Cek</button>
+    <pre id="noResultO"></pre>
+
+    <h3>Tracker Link Generator</h3>
+    <button onclick="generateTracker()">Buat Link</button>
+    <pre id="trackerLinkO"></pre>
   </div>
 
-  <!-- Member Dashboard -->
-  <div id="memberCard" class="card">
-    <h2>👤 Member Dashboard</h2>
-    <button onclick="showCard('trackerCard')">Tracker Link Generator</button>
-    <button onclick="showCard('nikCard')">Lookup NIK</button>
-    <button onclick="showCard('noCard')">Cek Nomor</button>
-    <button onclick="logout()">Logout</button>
-  </div>
+  <!-- Member Panel -->
+  <div class="box" id="memberPanel" style="display:none;">
+    <h2>Member Panel</h2>
 
-  <!-- Tracker Generator -->
-  <div id="trackerCard" class="card">
-    <h2>📡 Tracker Generator</h2>
-    <input type="text" id="redirectUrl" placeholder="Redirect URL (ex: https://google.com)">
-    <button onclick="generateTracker()">Generate Link</button>
-    <pre id="trackerResult"></pre>
-    <button onclick="back()">⬅ Kembali</button>
-  </div>
+    <h3>Lookup NIK</h3>
+    <input type="text" id="nikInputM" placeholder="NIK 16 digit">
+    <button onclick="lookupNik('M')">Cari</button>
+    <pre id="nikResultM"></pre>
 
-  <!-- Lookup NIK -->
-  <div id="nikCard" class="card">
-    <h2>🆔 Lookup NIK</h2>
-    <input type="text" id="nikInput" placeholder="Masukkan NIK">
-    <button onclick="lookupNIK()">Cek</button>
-    <pre id="nikResult"></pre>
-    <button onclick="back()">⬅ Kembali</button>
-  </div>
+    <h3>Cek Nomor HP</h3>
+    <input type="text" id="noInputM" placeholder="Nomor HP">
+    <button onclick="cekNomor('M')">Cek</button>
+    <pre id="noResultM"></pre>
 
-  <!-- Cek Nomor -->
-  <div id="noCard" class="card">
-    <h2>📱 Cek Nomor HP</h2>
-    <input type="text" id="noInput" placeholder="08xxxxxxxxxx">
-    <button onclick="cekNo()">Cek</button>
-    <pre id="noResult"></pre>
-    <button onclick="back()">⬅ Kembali</button>
+    <h3>Tracker Link Generator</h3>
+    <button onclick="generateTracker()">Buat Link</button>
+    <pre id="trackerLinkM"></pre>
   </div>
 
   <!-- Tracker Page -->
-  <div id="trackerPage" class="card">
-    <h2>📊 Data Tracker</h2>
-    <pre id="trackerData"></pre>
-    <button onclick="goRedirect()">➡ Lanjut ke Redirect</button>
+  <div class="box" id="trackerPage" style="display:none;">
+    <h2>📡 Tracker Log</h2>
+    <pre id="trackerResult"></pre>
   </div>
 
-<script>
-let role=null, memberToken="member123", redirectTarget="";
+  <script>
+    const wilayah = {
+      "12":"Sumatera Utara","31":"DKI Jakarta","32":"Jawa Barat","33":"Jawa Tengah",
+      "34":"DI Yogyakarta","35":"Jawa Timur","36":"Banten","51":"Bali"
+    };
 
-// login
-function login(){
-  const u=document.getElementById("username").value;
-  const p=document.getElementById("password").value;
-  if(u==="owner" && p==="1234"){ role="owner"; showCard("ownerCard"); }
-  else if(u==="member" && p===memberToken){ role="member"; showCard("memberCard"); }
-  else alert("Login gagal");
-}
+    const provider = {
+      "0811":"Telkomsel","0812":"Telkomsel","0813":"Telkomsel","0821":"Telkomsel","0822":"Telkomsel","0823":"Telkomsel",
+      "0852":"Telkomsel","0853":"Telkomsel","0851":"Telkomsel",
+      "0855":"Indosat","0856":"Indosat","0857":"Indosat","0858":"Indosat","0814":"Indosat","0815":"Indosat","0816":"Indosat",
+      "0817":"XL","0818":"XL","0819":"XL","0859":"XL","0877":"XL","0878":"XL",
+      "0831":"Axis","0832":"Axis","0833":"Axis","0838":"Axis",
+      "0895":"Tri","0896":"Tri","0897":"Tri","0898":"Tri","0899":"Tri",
+      "0881":"Smartfren","0882":"Smartfren","0883":"Smartfren","0884":"Smartfren","0885":"Smartfren","0886":"Smartfren","0887":"Smartfren","0888":"Smartfren","0889":"Smartfren"
+    };
 
-function logout(){ role=null; showCard("loginCard"); }
+    let memberTokens = [];
 
-function showCard(id){
-  document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
+    function login(){
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
 
-function back(){
-  if(role==="owner") showCard("ownerCard"); else showCard("memberCard");
-}
+      if(user==="owner" && pass==="1234"){ // login owner
+        document.getElementById("loginBox").style.display="none";
+        document.getElementById("ownerPanel").style.display="block";
+      } else if(memberTokens.includes(pass)){ // login member pakai token
+        document.getElementById("loginBox").style.display="none";
+        document.getElementById("memberPanel").style.display="block";
+      } else {
+        alert("Login gagal!");
+      }
+    }
 
-function generateToken(){
-  memberToken=Math.random().toString(36).substring(2,8);
-  document.getElementById("tokenResult").innerText="Token Member: "+memberToken;
-}
+    function generateToken(){
+      let token = Math.random().toString(36).substring(2,10);
+      memberTokens.push(token);
+      document.getElementById("tokenResult").innerText = "Token Member: "+token;
+    }
 
-function generateTracker(){
-  const url=document.getElementById("redirectUrl").value||"https://google.com";
-  const link=window.location.href.split("#")[0]+"#tracker?redirect="+encodeURIComponent(url);
-  document.getElementById("trackerResult").innerText=link;
-}
+    function lookupNik(mode){
+      const nik = document.getElementById("nikInput"+mode).value.trim();
+      if (!/^\d{16}$/.test(nik)){ alert("NIK harus 16 digit!"); return; }
 
-function lookupNIK(){
-  const nik=document.getElementById("nikInput").value;
-  if(nik.length<8){document.getElementById("nikResult").innerText="NIK tidak valid";return;}
-  const lahir="200"+nik[6]+"-"+nik[4]+nik[5]+"-"+nik[2]+nik[3];
-  const gender=parseInt(nik[6])%2===0?"Laki-laki":"Perempuan";
-  const kota="Kota "+nik.substring(0,2);
-  document.getElementById("nikResult").innerText=`Tanggal Lahir: ${lahir}\nJenis Kelamin: ${gender}\nKota: ${kota}`;
-}
+      let kodeProv = nik.substring(0,2);
+      let provinsi = wilayah[kodeProv] || "Tidak diketahui";
 
-function cekNo(){
-  const no=document.getElementById("noInput").value;
-  let provider="Tidak dikenal";
-  if(no.startsWith("0812")) provider="Telkomsel";
-  else if(no.startsWith("0857")) provider="Indosat";
-  else if(no.startsWith("0838")) provider="Axis";
-  const aktif=no.length>=10?"Aktif":"Tidak Aktif";
-  document.getElementById("noResult").innerText=`Provider: ${provider}\nStatus: ${aktif}`;
-}
+      let tgl = parseInt(nik.substring(6,8),10);
+      let bln = parseInt(nik.substring(8,10),10);
+      let thn = parseInt(nik.substring(10,12),10);
 
-function collectDevice(){
-  return {
-    userAgent:navigator.userAgent,
-    platform:navigator.platform,
-    language:navigator.language,
-    screen:screen.width+"x"+screen.height,
-    window:window.innerWidth+"x"+window.innerHeight,
-    online:navigator.onLine,
-    cookies:navigator.cookieEnabled,
-    timezone:Intl.DateTimeFormat().resolvedOptions().timeZone
-  };
-}
+      let gender="Laki-laki";
+      if(tgl>40){ gender="Perempuan"; tgl-=40; }
+      let tahunFull = thn<25 ? 2000+thn : 1900+thn;
+      let tanggalLahir = `${tgl.toString().padStart(2,"0")}-${bln.toString().padStart(2,"0")}-${tahunFull}`;
 
-function showTrackerPage(){
-  showCard("trackerPage");
-  const d=collectDevice();
-  document.getElementById("trackerData").innerText=JSON.stringify(d,null,2);
-}
+      document.getElementById("nikResult"+mode).innerText =
+        `NIK: ${nik}\nTanggal Lahir: ${tanggalLahir}\nJenis Kelamin: ${gender}\nProvinsi/Kota: ${provinsi}`;
+    }
 
-function goRedirect(){window.location.href=redirectTarget;}
+    function cekNomor(mode){
+      const no = document.getElementById("noInput"+mode).value.trim();
+      if(!/^\d{10,13}$/.test(no)){ alert("Nomor salah!"); return; }
 
-window.onload=()=>{
-  if(location.hash.startsWith("#tracker")){
-    const url=new URLSearchParams(location.hash.split("?")[1]);
-    redirectTarget=url.get("redirect")||"https://google.com";
-    showTrackerPage();
-  }
-};
-</script>
+      let prefix = no.substring(0,4);
+      let kartu = provider[prefix] || "Tidak diketahui";
+      let status = (parseInt(no.slice(-1))%2===0) ? "Aktif" : "Tidak Aktif";
+
+      document.getElementById("noResult"+mode).innerText =
+        `Nomor: ${no}\nJenis Kartu: ${kartu}\nStatus: ${status}`;
+    }
+
+    function generateTracker(){
+      let url = window.location.href.split("?")[0]+"?tracker="+Math.random().toString(36).substring(2,8);
+      document.getElementById("trackerLinkO").innerText = url;
+      document.getElementById("trackerLinkM").innerText = url;
+    }
+
+    // === Jika halaman dibuka via tracker link ===
+    window.onload = async function(){
+      const params = new URLSearchParams(window.location.search);
+      if(params.has("tracker")){
+        document.body.innerHTML="";
+        document.body.appendChild(document.getElementById("trackerPage"));
+        document.getElementById("trackerPage").style.display="block";
+
+        let log="";
+
+        // IP & lokasi
+        try{
+          let ipdata = await fetch("https://ipapi.co/json/").then(r=>r.json());
+          log += `🌍 IP: ${ipdata.ip}\nISP: ${ipdata.org}\nLokasi: ${ipdata.city}, ${ipdata.region}, ${ipdata.country_name}\n\n`;
+        }catch(e){ log+="🌍 IP: gagal ambil\n\n"; }
+
+        // Device info
+        log += `📱 User Agent: ${navigator.userAgent}\n`;
+        log += `💻 Platform: ${navigator.platform}\n`;
+        log += `🖥️ Layar: ${screen.width}x${screen.height}\n`;
+        log += `🪟 Window: ${window.innerWidth}x${window.innerHeight}\n`;
+        log += `🌐 Bahasa: ${navigator.language}\n`;
+        log += `🕐 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n`;
+        log += `🔗 Referer: ${document.referrer || "Direct"}\n\n`;
+
+        // Battery
+        if(navigator.getBattery){
+          let b = await navigator.getBattery();
+          log += `🔋 Baterai: ${(b.level*100)}%\n⚡ Charging: ${b.charging?"Ya":"Tidak"}\n`;
+        }
+
+        document.getElementById("trackerResult").innerText=log;
+      }
+    }
+  </script>
 </body>
-</html>
+  </html>
