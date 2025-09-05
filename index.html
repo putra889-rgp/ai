@@ -2,166 +2,197 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Owner & Member Dashboard</title>
+  <title>Putra Tools</title>
   <style>
-    body {font-family: Arial, sans-serif;background:#0d1117;color:#e6edf3;margin:0;padding:0;}
-    header {background:#161b22;padding:15px;text-align:center;font-size:1.3em;}
-    .container{display:none;padding:20px;}
-    .login-box,.member-box{display:flex;flex-direction:column;gap:10px;background:#161b22;padding:20px;border-radius:12px;max-width:340px;margin:50px auto;box-shadow:0 0 12px rgba(0,0,0,0.5);text-align:center;}
-    input,button,textarea{padding:10px;border:none;border-radius:8px;outline:none;}
-    button{background:#238636;color:white;cursor:pointer;transition:0.3s;}
-    button:hover{background:#2ea043;}
-    .btn-logout{background:#da3633;}
-    .btn-logout:hover{background:#f85149;}
-    .section{background:#161b22;padding:15px;border-radius:10px;margin-bottom:15px;}
-    textarea{width:100%;height:100px;background:#0d1117;color:#e6edf3;border-radius:8px;border:1px solid #30363d;padding:10px;}
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #0d1117;
+      color: #eee;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: #161b22;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      width: 350px;
+      text-align: center;
+      display: none;
+      animation: fadeIn .4s ease;
+    }
+    .card.active { display: block; }
+    input, button {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: none;
+    }
+    input { background: #0d1117; color: #eee; border: 1px solid #333; }
+    button { background: #238636; color: #fff; cursor: pointer; font-weight: bold; }
+    button:hover { background: #2ea043; }
+    h2 { margin-bottom: 15px; }
+    pre {
+      text-align: left;
+      white-space: pre-wrap;
+      background: #0d1117;
+      color: #eee;
+      padding: 10px;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
   </style>
 </head>
 <body>
+  <!-- Login -->
+  <div id="loginCard" class="card active">
+    <h2>🔑 Login</h2>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+  </div>
 
-<header>🔐 Owner & Member Dashboard</header>
-
-<!-- Pilihan Masuk -->
-<div class="member-box" id="chooseRole">
-  <h3>Selamat Datang</h3>
-  <button onclick="showLogin()">Masuk sebagai Owner</button>
-  <button onclick="enterMember()">Masuk sebagai Member</button>
-</div>
-
-<!-- Login Owner -->
-<div class="login-box" id="loginOwner">
-  <h3>Login Owner</h3>
-  <input type="text" id="ownerUser" placeholder="Username">
-  <input type="password" id="ownerPass" placeholder="Password">
-  <button onclick="loginOwner()">Login</button>
-  <button class="btn-logout" onclick="backHome()">Kembali</button>
-</div>
-
-<!-- Dashboard Owner -->
-<div class="container" id="ownerDashboard">
-  <h2>📊 Dashboard Owner</h2>
-  <div class="section">Jumlah Member sudah akses: <b id="memberCount">0</b></div>
-
-  <div class="section">
-    <h3>🔑 Generate Token</h3>
-    <button onclick="generateToken()">Buat Token</button>
+  <!-- Owner Dashboard -->
+  <div id="ownerCard" class="card">
+    <h2>👑 Owner Dashboard</h2>
+    <button onclick="generateToken()">Generate Token Member</button>
     <p id="tokenResult"></p>
+    <button onclick="showCard('trackerCard')">Tracker Link Generator</button>
+    <button onclick="showCard('nikCard')">Lookup NIK</button>
+    <button onclick="showCard('noCard')">Cek Nomor</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
-  <div class="section">
-    <h3>🕵️ Lookup NIK</h3>
-    <input type="text" id="nikInputOwner" placeholder="Masukkan NIK">
-    <button onclick="lookupNIK('Owner')">Cek</button>
-    <p id="nikResultOwner"></p>
+  <!-- Member Dashboard -->
+  <div id="memberCard" class="card">
+    <h2>👤 Member Dashboard</h2>
+    <button onclick="showCard('trackerCard')">Tracker Link Generator</button>
+    <button onclick="showCard('nikCard')">Lookup NIK</button>
+    <button onclick="showCard('noCard')">Cek Nomor</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
-  <div class="section">
-    <h3>📞 Cek Nomor</h3>
-    <input type="text" id="noInputOwner" placeholder="Masukkan Nomor HP">
-    <button onclick="cekNo('Owner')">Cek</button>
-    <p id="noResultOwner"></p>
+  <!-- Tracker Generator -->
+  <div id="trackerCard" class="card">
+    <h2>📡 Tracker Generator</h2>
+    <input type="text" id="redirectUrl" placeholder="Redirect URL (ex: https://google.com)">
+    <button onclick="generateTracker()">Generate Link</button>
+    <pre id="trackerResult"></pre>
+    <button onclick="back()">⬅ Kembali</button>
   </div>
 
-  <div class="section">
-    <h3>🌐 Tracker Link Generator</h3>
-    <input type="text" id="redirectOwner" placeholder="Redirect ke URL">
-    <button onclick="generateTracker('Owner')">Buat Link</button>
-    <textarea id="trackerOwner" readonly></textarea>
+  <!-- Lookup NIK -->
+  <div id="nikCard" class="card">
+    <h2>🆔 Lookup NIK</h2>
+    <input type="text" id="nikInput" placeholder="Masukkan NIK">
+    <button onclick="lookupNIK()">Cek</button>
+    <pre id="nikResult"></pre>
+    <button onclick="back()">⬅ Kembali</button>
   </div>
 
-  <button class="btn-logout" onclick="logout()">Logout</button>
-</div>
-
-<!-- Dashboard Member -->
-<div class="container" id="memberDashboard">
-  <h2>👥 Dashboard Member</h2>
-
-  <div class="section">
-    <h3>🕵️ Lookup NIK</h3>
-    <input type="text" id="nikInputMember" placeholder="Masukkan NIK">
-    <button onclick="lookupNIK('Member')">Cek</button>
-    <p id="nikResultMember"></p>
+  <!-- Cek Nomor -->
+  <div id="noCard" class="card">
+    <h2>📱 Cek Nomor HP</h2>
+    <input type="text" id="noInput" placeholder="08xxxxxxxxxx">
+    <button onclick="cekNo()">Cek</button>
+    <pre id="noResult"></pre>
+    <button onclick="back()">⬅ Kembali</button>
   </div>
 
-  <div class="section">
-    <h3>📞 Cek Nomor</h3>
-    <input type="text" id="noInputMember" placeholder="Masukkan Nomor HP">
-    <button onclick="cekNo('Member')">Cek</button>
-    <p id="noResultMember"></p>
+  <!-- Tracker Page -->
+  <div id="trackerPage" class="card">
+    <h2>📊 Data Tracker</h2>
+    <pre id="trackerData"></pre>
+    <button onclick="goRedirect()">➡ Lanjut ke Redirect</button>
   </div>
-
-  <div class="section">
-    <h3>🌐 Tracker Link Generator</h3>
-    <input type="text" id="redirectMember" placeholder="Redirect ke URL">
-    <button onclick="generateTracker('Member')">Buat Link</button>
-    <textarea id="trackerMember" readonly></textarea>
-  </div>
-
-  <button class="btn-logout" onclick="logout()">Keluar</button>
-</div>
 
 <script>
-  // === CONFIG OWNER ===
-  const OWNER_USER = "admin";
-  const OWNER_PASS = "1234";
+let role=null, memberToken="member123", redirectTarget="";
 
-  // === LOGIN FLOW ===
-  function showLogin(){document.getElementById("chooseRole").style.display="none";document.getElementById("loginOwner").style.display="flex";}
-  function backHome(){document.getElementById("loginOwner").style.display="none";document.getElementById("chooseRole").style.display="flex";}
-  function loginOwner(){
-    let u=document.getElementById("ownerUser").value, p=document.getElementById("ownerPass").value;
-    if(u===OWNER_USER && p===OWNER_PASS){localStorage.setItem("role","owner");showDashboard();}else{alert("Username/password salah!");}
+// login
+function login(){
+  const u=document.getElementById("username").value;
+  const p=document.getElementById("password").value;
+  if(u==="owner" && p==="1234"){ role="owner"; showCard("ownerCard"); }
+  else if(u==="member" && p===memberToken){ role="member"; showCard("memberCard"); }
+  else alert("Login gagal");
+}
+
+function logout(){ role=null; showCard("loginCard"); }
+
+function showCard(id){
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function back(){
+  if(role==="owner") showCard("ownerCard"); else showCard("memberCard");
+}
+
+function generateToken(){
+  memberToken=Math.random().toString(36).substring(2,8);
+  document.getElementById("tokenResult").innerText="Token Member: "+memberToken;
+}
+
+function generateTracker(){
+  const url=document.getElementById("redirectUrl").value||"https://google.com";
+  const link=window.location.href.split("#")[0]+"#tracker?redirect="+encodeURIComponent(url);
+  document.getElementById("trackerResult").innerText=link;
+}
+
+function lookupNIK(){
+  const nik=document.getElementById("nikInput").value;
+  if(nik.length<8){document.getElementById("nikResult").innerText="NIK tidak valid";return;}
+  const lahir="200"+nik[6]+"-"+nik[4]+nik[5]+"-"+nik[2]+nik[3];
+  const gender=parseInt(nik[6])%2===0?"Laki-laki":"Perempuan";
+  const kota="Kota "+nik.substring(0,2);
+  document.getElementById("nikResult").innerText=`Tanggal Lahir: ${lahir}\nJenis Kelamin: ${gender}\nKota: ${kota}`;
+}
+
+function cekNo(){
+  const no=document.getElementById("noInput").value;
+  let provider="Tidak dikenal";
+  if(no.startsWith("0812")) provider="Telkomsel";
+  else if(no.startsWith("0857")) provider="Indosat";
+  else if(no.startsWith("0838")) provider="Axis";
+  const aktif=no.length>=10?"Aktif":"Tidak Aktif";
+  document.getElementById("noResult").innerText=`Provider: ${provider}\nStatus: ${aktif}`;
+}
+
+function collectDevice(){
+  return {
+    userAgent:navigator.userAgent,
+    platform:navigator.platform,
+    language:navigator.language,
+    screen:screen.width+"x"+screen.height,
+    window:window.innerWidth+"x"+window.innerHeight,
+    online:navigator.onLine,
+    cookies:navigator.cookieEnabled,
+    timezone:Intl.DateTimeFormat().resolvedOptions().timeZone
+  };
+}
+
+function showTrackerPage(){
+  showCard("trackerPage");
+  const d=collectDevice();
+  document.getElementById("trackerData").innerText=JSON.stringify(d,null,2);
+}
+
+function goRedirect(){window.location.href=redirectTarget;}
+
+window.onload=()=>{
+  if(location.hash.startsWith("#tracker")){
+    const url=new URLSearchParams(location.hash.split("?")[1]);
+    redirectTarget=url.get("redirect")||"https://google.com";
+    showTrackerPage();
   }
-  function enterMember(){localStorage.setItem("role","member");incrementMemberCount();showDashboard();}
-
-  function showDashboard(){
-    document.querySelectorAll(".container,.login-box,.member-box").forEach(e=>e.style.display="none");
-    let role=localStorage.getItem("role");
-    if(role==="owner"){document.getElementById("ownerDashboard").style.display="block";updateMemberCount();}
-    else if(role==="member"){document.getElementById("memberDashboard").style.display="block";}
-    else{document.getElementById("chooseRole").style.display="flex";}
-  }
-  function logout(){localStorage.removeItem("role");showDashboard();}
-
-  // === MEMBER COUNTER ===
-  function incrementMemberCount(){let c=parseInt(localStorage.getItem("memberCount")||"0");c++;localStorage.setItem("memberCount",c);}
-  function updateMemberCount(){document.getElementById("memberCount").innerText=localStorage.getItem("memberCount")||"0";}
-
-  // === FITUR: GENERATE TOKEN ===
-  function generateToken(){let t="TOKEN-"+Math.random().toString(36).substr(2,8).toUpperCase();document.getElementById("tokenResult").innerText=t;}
-
-  // === FITUR: LOOKUP NIK (simulasi) ===
-  function lookupNIK(role){
-    let nik=document.getElementById("nikInput"+role).value;
-    if(nik.length<8){alert("NIK tidak valid");return;}
-    let tgl=nik.substr(6,2), bln=nik.substr(4,2), thn="19"+nik.substr(2,2);
-    let gender=(parseInt(tgl)>40)?"Perempuan":"Laki-Laki";if(gender==="Perempuan")tgl=parseInt(tgl)-40;
-    let kota=["Jakarta","Bandung","Surabaya","Medan","Makassar","Yogyakarta"];
-    let hasil=`Tanggal Lahir: ${tgl}-${bln}-${thn}, Kelamin: ${gender}, Kota: ${kota[Math.floor(Math.random()*kota.length)]}`;
-    document.getElementById("nikResult"+role).innerText=hasil;
-  }
-
-  // === FITUR: CEK NOMOR (simulasi) ===
-  function cekNo(role){
-    let no=document.getElementById("noInput"+role).value;
-    let provider="Tidak diketahui";
-    if(no.startsWith("0812")||no.startsWith("0813"))provider="Telkomsel";
-    else if(no.startsWith("0857")||no.startsWith("0856"))provider="Indosat";
-    else if(no.startsWith("0817")||no.startsWith("0818"))provider="XL";
-    let status=(Math.random()>0.5)?"Aktif":"Tidak Aktif";
-    document.getElementById("noResult"+role).innerText=`Provider: ${provider}, Status: ${status}`;
-  }
-
-  // === FITUR: TRACKER LINK ===
-  function generateTracker(role){
-    let url=document.getElementById("redirect"+role).value||"https://google.com";
-    let tracker=window.location.origin+window.location.pathname+"?redirect="+encodeURIComponent(url);
-    document.getElementById("tracker"+role).value=tracker;
-  }
-
-  // Jalankan awal
-  showDashboard();
+};
 </script>
-
 </body>
 </html>
