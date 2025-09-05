@@ -1,185 +1,150 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Owner & Member Panel</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#0d1117; color:#c9d1d9; padding:20px; }
-    h1,h2 { color:#00ffcc; }
-    .box { background:#161b22; padding:15px; border-radius:10px; margin:15px 0; }
-    input,button { padding:10px; border-radius:8px; border:none; margin:5px 0; }
-    button { background:#00ffcc; color:#111; cursor:pointer; font-weight:bold; }
-    pre { background:#111; padding:10px; border-radius:8px; white-space:pre-wrap; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login & Dashboard Tracker</title>
+<style>
+body { font-family: Arial; margin:0; padding:0; background:#f0f2f5; }
+.container { display:flex; justify-content:center; align-items:center; height:100vh; }
+.card { background:white; padding:20px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.2); width:350px; }
+h2,h1 { text-align:center; }
+input, button { width:100%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
+button { background:#007bff; color:white; border:none; cursor:pointer; }
+button:hover { background:#0056b3; }
+.section { margin-top:20px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 3px 6px rgba(0,0,0,0.1); }
+.hidden { display:none; }
+pre { background:#eee; padding:10px; border-radius:5px; overflow-x:auto; }
+.server-status { font-weight:bold; margin-top:10px; }
+.error { color:red; text-align:center; }
+</style>
 </head>
 <body>
-  <h1>🔑 Login System</h1>
-  
-  <!-- Login -->
-  <div class="box" id="loginBox">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password / Token"><br>
-    <button onclick="login()">Login</button>
-  </div>
 
-  <!-- Owner Panel -->
-  <div class="box" id="ownerPanel" style="display:none;">
-    <h2>Owner Panel</h2>
-    <button onclick="generateToken()">Generate Member Token</button>
-    <pre id="tokenResult"></pre>
+<div class="container">
 
-    <h3>Lookup NIK</h3>
-    <input type="text" id="nikInputO" placeholder="NIK 16 digit">
-    <button onclick="lookupNik('O')">Cari</button>
-    <pre id="nikResultO"></pre>
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+<h2>Login</h2>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p class="error" id="errorMsg"></p>
+</div>
 
-    <h3>Cek Nomor HP</h3>
-    <input type="text" id="noInputO" placeholder="Nomor HP">
-    <button onclick="cekNomor('O')">Cek</button>
-    <pre id="noResultO"></pre>
+<!-- ADMIN DASHBOARD -->
+<div class="card hidden" id="adminDashboard">
+<h1>Admin Dashboard</h1>
 
-    <h3>Tracker Link Generator</h3>
-    <button onclick="generateTracker()">Buat Link</button>
-    <pre id="trackerLinkO"></pre>
-  </div>
+<div class="section">
+<h2>Tracker Link Generator Device</h2>
+<input type="text" id="customLinkAdmin" placeholder="Masukkan custom link">
+<button onclick="generateLinkAdmin()">Buat Tracker</button>
+<pre id="generatedLinkAdmin"></pre>
+</div>
 
-  <!-- Member Panel -->
-  <div class="box" id="memberPanel" style="display:none;">
-    <h2>Member Panel</h2>
+<div class="section">
+<h2>Kontrol Server Member</h2>
+<button onclick="toggleServer()">Matikan / Nyalakan Server</button>
+<p class="server-status" id="serverStatus">Server: Nyala</p>
+</div>
 
-    <h3>Lookup NIK</h3>
-    <input type="text" id="nikInputM" placeholder="NIK 16 digit">
-    <button onclick="lookupNik('M')">Cari</button>
-    <pre id="nikResultM"></pre>
+<button style="margin-top:20px;background:#dc3545;" onclick="logout()">Logout</button>
+</div>
 
-    <h3>Cek Nomor HP</h3>
-    <input type="text" id="noInputM" placeholder="Nomor HP">
-    <button onclick="cekNomor('M')">Cek</button>
-    <pre id="noResultM"></pre>
+<!-- MEMBER DASHBOARD -->
+<div class="card hidden" id="memberDashboard">
+<h1>Member Dashboard</h1>
 
-    <h3>Tracker Link Generator</h3>
-    <button onclick="generateTracker()">Buat Link</button>
-    <pre id="trackerLinkM"></pre>
-  </div>
+<div class="section">
+<h2>Tracker Link Generator Device</h2>
+<input type="text" id="customLinkMember" placeholder="Masukkan custom link">
+<button onclick="generateLinkMember()">Buat Tracker</button>
+<pre id="generatedLinkMember"></pre>
+</div>
 
-  <!-- Tracker Page -->
-  <div class="box" id="trackerPage" style="display:none;">
-    <h2>📡 Tracker Log</h2>
-    <pre id="trackerResult"></pre>
-  </div>
+<button style="margin-top:20px;background:#dc3545;" onclick="logout()">Logout</button>
 
-  <script>
-    const wilayah = {
-      "12":"Sumatera Utara","31":"DKI Jakarta","32":"Jawa Barat","33":"Jawa Tengah",
-      "34":"DI Yogyakarta","35":"Jawa Timur","36":"Banten","51":"Bali"
-    };
+</div>
+</div>
 
-    const provider = {
-      "0811":"Telkomsel","0812":"Telkomsel","0813":"Telkomsel","0821":"Telkomsel","0822":"Telkomsel","0823":"Telkomsel",
-      "0852":"Telkomsel","0853":"Telkomsel","0851":"Telkomsel",
-      "0855":"Indosat","0856":"Indosat","0857":"Indosat","0858":"Indosat","0814":"Indosat","0815":"Indosat","0816":"Indosat",
-      "0817":"XL","0818":"XL","0819":"XL","0859":"XL","0877":"XL","0878":"XL",
-      "0831":"Axis","0832":"Axis","0833":"Axis","0838":"Axis",
-      "0895":"Tri","0896":"Tri","0897":"Tri","0898":"Tri","0899":"Tri",
-      "0881":"Smartfren","0882":"Smartfren","0883":"Smartfren","0884":"Smartfren","0885":"Smartfren","0886":"Smartfren","0887":"Smartfren","0888":"Smartfren","0889":"Smartfren"
-    };
+<script>
+// USERS
+const users = [
+{ username:"admin", password:"admin123", role:"admin" },
+{ username:"member", password:"member123", role:"member" }
+];
 
-    let memberTokens = [];
+let serverRunning = true;
 
-    function login(){
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+// LOGIN / LOGOUT
+function login(){
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const user = users.find(u=>u.username===username && u.password===password);
+  const errorMsg = document.getElementById('errorMsg');
+  if(user){
+    document.getElementById('loginCard').classList.add('hidden');
+    errorMsg.textContent="";
+    if(user.role==="admin") document.getElementById('adminDashboard').classList.remove('hidden');
+    else document.getElementById('memberDashboard').classList.remove('hidden');
+  } else {
+    errorMsg.textContent="Username atau password salah!";
+  }
+}
+function logout(){
+  document.getElementById('loginCard').classList.remove('hidden');
+  document.getElementById('adminDashboard').classList.add('hidden');
+  document.getElementById('memberDashboard').classList.add('hidden');
+  document.getElementById('username').value="";
+  document.getElementById('password').value="";
+}
 
-      if(user==="owner" && pass==="1234"){ // login owner
-        document.getElementById("loginBox").style.display="none";
-        document.getElementById("ownerPanel").style.display="block";
-      } else if(memberTokens.includes(pass)){ // login member pakai token
-        document.getElementById("loginBox").style.display="none";
-        document.getElementById("memberPanel").style.display="block";
-      } else {
-        alert("Login gagal!");
-      }
-    }
+// SERVER CONTROL
+function toggleServer(){
+  serverRunning=!serverRunning;
+  document.getElementById('serverStatus').textContent="Server: "+(serverRunning?"Nyala":"Mati");
+  alert("Server member sekarang "+(serverRunning?"Nyala":"Mati"));
+}
 
-    function generateToken(){
-      let token = Math.random().toString(36).substring(2,10);
-      memberTokens.push(token);
-      document.getElementById("tokenResult").innerText = "Token Member: "+token;
-    }
+// TRACKER LINK GENERATOR DEVICE
+async function getDeviceInfo(customLink){
+  const deviceInfo = {
+    link: customLink,
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language,
+    screen: `${screen.width}x${screen.height}`,
+    ram: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Tidak tersedia",
+    cores: navigator.hardwareConcurrency ? navigator.hardwareConcurrency : "Tidak tersedia",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  };
 
-    function lookupNik(mode){
-      const nik = document.getElementById("nikInput"+mode).value.trim();
-      if (!/^\d{16}$/.test(nik)){ alert("NIK harus 16 digit!"); return; }
+  // Baterai
+  if(navigator.getBattery){
+    try{
+      const battery = await navigator.getBattery();
+      deviceInfo.battery = `${Math.round(battery.level*100)}%, ${battery.charging?"sedang di cas":"tidak di cas"}`;
+    }catch(e){ deviceInfo.battery="Tidak tersedia"; }
+  } else deviceInfo.battery="Tidak tersedia";
 
-      let kodeProv = nik.substring(0,2);
-      let provinsi = wilayah[kodeProv] || "Tidak diketahui";
+  return deviceInfo;
+}
 
-      let tgl = parseInt(nik.substring(6,8),10);
-      let bln = parseInt(nik.substring(8,10),10);
-      let thn = parseInt(nik.substring(10,12),10);
+async function generateLinkAdmin(){
+  const link = document.getElementById('customLinkAdmin').value;
+  if(!link) return alert("Isi custom link!");
+  const info = await getDeviceInfo(link);
+  document.getElementById('generatedLinkAdmin').textContent=JSON.stringify(info,null,2);
+}
 
-      let gender="Laki-laki";
-      if(tgl>40){ gender="Perempuan"; tgl-=40; }
-      let tahunFull = thn<25 ? 2000+thn : 1900+thn;
-      let tanggalLahir = `${tgl.toString().padStart(2,"0")}-${bln.toString().padStart(2,"0")}-${tahunFull}`;
+async function generateLinkMember(){
+  const link = document.getElementById('customLinkMember').value;
+  if(!link) return alert("Isi custom link!");
+  const info = await getDeviceInfo(link);
+  document.getElementById('generatedLinkMember').textContent=JSON.stringify(info,null,2);
+}
+</script>
 
-      document.getElementById("nikResult"+mode).innerText =
-        `NIK: ${nik}\nTanggal Lahir: ${tanggalLahir}\nJenis Kelamin: ${gender}\nProvinsi/Kota: ${provinsi}`;
-    }
-
-    function cekNomor(mode){
-      const no = document.getElementById("noInput"+mode).value.trim();
-      if(!/^\d{10,13}$/.test(no)){ alert("Nomor salah!"); return; }
-
-      let prefix = no.substring(0,4);
-      let kartu = provider[prefix] || "Tidak diketahui";
-      let status = (parseInt(no.slice(-1))%2===0) ? "Aktif" : "Tidak Aktif";
-
-      document.getElementById("noResult"+mode).innerText =
-        `Nomor: ${no}\nJenis Kartu: ${kartu}\nStatus: ${status}`;
-    }
-
-    function generateTracker(){
-      let url = window.location.href.split("?")[0]+"?tracker="+Math.random().toString(36).substring(2,8);
-      document.getElementById("trackerLinkO").innerText = url;
-      document.getElementById("trackerLinkM").innerText = url;
-    }
-
-    // === Jika halaman dibuka via tracker link ===
-    window.onload = async function(){
-      const params = new URLSearchParams(window.location.search);
-      if(params.has("tracker")){
-        document.body.innerHTML="";
-        document.body.appendChild(document.getElementById("trackerPage"));
-        document.getElementById("trackerPage").style.display="block";
-
-        let log="";
-
-        // IP & lokasi
-        try{
-          let ipdata = await fetch("https://ipapi.co/json/").then(r=>r.json());
-          log += `🌍 IP: ${ipdata.ip}\nISP: ${ipdata.org}\nLokasi: ${ipdata.city}, ${ipdata.region}, ${ipdata.country_name}\n\n`;
-        }catch(e){ log+="🌍 IP: gagal ambil\n\n"; }
-
-        // Device info
-        log += `📱 User Agent: ${navigator.userAgent}\n`;
-        log += `💻 Platform: ${navigator.platform}\n`;
-        log += `🖥️ Layar: ${screen.width}x${screen.height}\n`;
-        log += `🪟 Window: ${window.innerWidth}x${window.innerHeight}\n`;
-        log += `🌐 Bahasa: ${navigator.language}\n`;
-        log += `🕐 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n`;
-        log += `🔗 Referer: ${document.referrer || "Direct"}\n\n`;
-
-        // Battery
-        if(navigator.getBattery){
-          let b = await navigator.getBattery();
-          log += `🔋 Baterai: ${(b.level*100)}%\n⚡ Charging: ${b.charging?"Ya":"Tidak"}\n`;
-        }
-
-        document.getElementById("trackerResult").innerText=log;
-      }
-    }
-  </script>
 </body>
-  </html>
+</html>
