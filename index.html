@@ -1,182 +1,117 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Tracker Link Generator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: #c9d1d9;
-      padding: 20px;
-    }
-    h1 { color: #00ffcc; }
-    .box {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 10px;
-      margin: 15px 0;
-    }
-    input, button {
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin: 5px 0;
-    }
-    button {
-      background: #00ffcc;
-      color: #111;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    a { color: #00ffcc; }
-    pre {
-      background: #111;
-      padding: 10px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Tracker Link Generator</title>
+<style>
+  body {font-family: Arial,sans-serif;background:#0d1117;color:#c9d1d9;padding:20px;}
+  h1 {color:#00ffcc;}
+  .box {background:#161b22;padding:15px;border-radius:10px;margin:15px 0;}
+  input, button {padding:10px;border-radius:8px;border:none;margin:5px 0;}
+  button {background:#00ffcc;color:#111;cursor:pointer;font-weight:bold;}
+  a {color:#00ffcc;}
+  pre {background:#111;padding:10px;border-radius:8px;white-space:pre-wrap;}
+</style>
 </head>
 <body>
-  <h1>🔗 Tracker Link Generator</h1>
+<h1>🔗 Tracker Link Generator</h1>
 
-  <div class="box">
-    <h3>Buat Link Tracker</h3>
-    <input type="text" id="targetUrl" placeholder="https://example.com">
-    <button onclick="generateTracker()">Generate</button>
-    <p id="generatedLink"></p>
-  </div>
+<div class="box">
+  <h3>Buat Link Tracker</h3>
+  <input type="text" id="targetUrl" placeholder="https://example.com">
+  <button onclick="generateTracker()">Generate</button>
+  <p id="generatedLink"></p>
+</div>
 
-  <div class="box">
-    <h3>Log Tracking</h3>
-    <pre id="logBox">Belum ada data...</pre>
-  </div>
+<div class="box">
+  <h3>Log Tracking</h3>
+  <pre id="logBox">Belum ada data...</pre>
+</div>
 
-  <script>
-    // --- Generate tracker link
-    function generateTracker() {
-      let url = document.getElementById("targetUrl").value.trim();
-      if (!url) {
-        alert("Masukkan URL dulu!");
-        return;
-      }
-      let trackerUrl = window.location.href.split("?")[0] + "?redirect=" + encodeURIComponent(url);
-      document.getElementById("generatedLink").innerHTML =
-        `Link Tracker: <a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
+<script>
+  // --- Generate tracker link
+  function generateTracker() {
+    let url = document.getElementById("targetUrl").value.trim();
+    if (!url) { alert("Masukkan URL dulu!"); return; }
+    let trackerUrl = window.location.origin + window.location.pathname + "?redirect=" + encodeURIComponent(url);
+    document.getElementById("generatedLink").innerHTML = `<a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
+  }
+
+  // --- Ambil info device
+  async function getDeviceInfo(target, victimText) {
+    let v = {};
+    v.url = target;
+    v.text = victimText || "N/A";
+    v.user_agent = navigator.userAgent;
+    v.platform = navigator.platform;
+    v.screen = `${screen.width}x${screen.height}`;
+    v.window = `${window.innerWidth}x${window.innerHeight}`;
+    v.orientation = screen.orientation?.type || "N/A";
+    v.dpr = window.devicePixelRatio;
+    v.cpu = navigator.hardwareConcurrency || "N/A";
+    v.ram = navigator.deviceMemory || "N/A";
+    v.language = navigator.language;
+    v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    v.touch = 'ontouchstart' in window;
+    v.maxTouchPoints = navigator.maxTouchPoints || 0;
+    v.cookies = navigator.cookieEnabled;
+    v.online = navigator.onLine;
+    v.doNotTrack = navigator.doNotTrack;
+    v.webdriver = navigator.webdriver;
+    v.pdfViewerEnabled = navigator.pdfViewerEnabled || false;
+
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      v.audioIn = devices.filter(d => d.kind === "audioinput").length;
+      v.audioOut = devices.filter(d => d.kind === "audiooutput").length;
+      v.videoIn = devices.filter(d => d.kind === "videoinput").length;
+    } catch {
+      v.audioIn = v.audioOut = v.videoIn = 0;
     }
 
-    // --- Ambil info device
-    async function getDeviceInfo(target, victimText) {
-      let v = {};
-      v.url = target;
-      v.text = victimText || "N/A";
-      v.user_agent = navigator.userAgent;
-      v.platform = navigator.platform;
-      v.screen = `${screen.width}x${screen.height}`;
-      v.window = `${window.innerWidth}x${window.innerHeight}`;
-      v.orientation = screen.orientation?.type;
-      v.dpr = window.devicePixelRatio;
-      v.cpu = navigator.hardwareConcurrency || "N/A";
-      v.ram = navigator.deviceMemory || "N/A";
-      v.language = navigator.language;
-      v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      v.touch = 'ontouchstart' in window;
-      v.maxTouchPoints = navigator.maxTouchPoints;
-      v.cookies = navigator.cookieEnabled;
-      v.online = navigator.onLine;
-      v.doNotTrack = navigator.doNotTrack;
-      v.webdriver = navigator.webdriver;
-      v.pdfViewerEnabled = navigator.pdfViewerEnabled;
+    v.connection = navigator.connection || {};
+    try {
+      const battery = await navigator.getBattery();
+      v.battery = { level: (battery.level*100) + "%", charging: battery.charging ? "Ya" : "Tidak" };
+    } catch { v.battery = { level:"N/A", charging:"N/A" }; }
 
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        v.audioIn = devices.filter(d => d.kind === "audioinput").length;
-        v.audioOut = devices.filter(d => d.kind === "audiooutput").length;
-        v.videoIn = devices.filter(d => d.kind === "videoinput").length;
-      } catch {
-        v.audioIn = v.audioOut = v.videoIn = 0;
-      }
+    v.time = new Date().toLocaleString();
+    return v;
+  }
 
-      v.connection = navigator.connection || {};
-      try {
-        const battery = await navigator.getBattery();
-        v.battery = {
-          level: (battery.level * 100) + "%",
-          charging: battery.charging ? "Ya" : "Tidak"
-        };
-      } catch {
-        v.battery = { level: "N/A", charging: "N/A" };
-      }
+  // --- Simpan log
+  function saveLog(info) {
+    let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
+    logs.push(info);
+    localStorage.setItem("trackerLogs", JSON.stringify(logs));
+  }
 
-      v.time = new Date().toLocaleString();
+  // --- Tampilkan log
+  function showLogs() {
+    let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
+    if(logs.length===0){document.getElementById("logBox").innerText="Belum ada data...";return;}
+    let text = "";
+    logs.forEach((v,i)=>{
+      text += `[${i+1}] ${v.time}\nDevice: ${v.user_agent}\nPlatform: ${v.platform}\nScreen: ${v.screen}\nWindow: ${v.window}\nOrientation: ${v.orientation}\nCPU: ${v.cpu}\nRAM: ${v.ram} GB\nLanguage: ${v.language}\nBattery: ${v.battery.level}, Charging: ${v.battery.charging}\nRedirect: ${v.url}\n------------------------------------------------\n`;
+    });
+    document.getElementById("logBox").innerText = text;
+  }
 
-      return v;
-    }
+  // --- Eksekusi jika ada redirect
+  const params = new URLSearchParams(window.location.search);
+  if(params.has("redirect")){
+    let target = params.get("redirect");
+    let victimText = prompt("Masukkan teks / nama Anda:") || "N/A";
 
-    // --- Simpan log
-    function saveLog(info) {
-      let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
-      logs.push(info);
-      localStorage.setItem("trackerLogs", JSON.stringify(logs));
-    }
-
-    // --- Tampilkan log
-    function showLogs() {
-      let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
-      if (logs.length === 0) {
-        document.getElementById("logBox").innerText = "Belum ada data...";
-        return;
-      }
-      let text = "";
-      logs.forEach((v, i) => {
-        text += `
-[${i+1}] ${v.time}
-📝 Victim Text: ${v.text}
-📲 Device: ${v.user_agent}
-🔧 Platform: ${v.platform}
-📐 Screen: ${v.screen}
-🪟 Window: ${v.window}
-🔄 Orientation: ${v.orientation}
-📊 DPR: ${v.dpr}
-🧠 CPU: ${v.cpu}
-💾 RAM: ${v.ram} GB
-🌍 Language: ${v.language}
-🕐 Timezone: ${v.timezone}
-📱 Touch: ${v.touch ? 'Yes' : 'No'}
-🍪 Cookies: ${v.cookies ? 'Enabled' : 'Disabled'}
-🌐 Online: ${v.online ? 'Connected' : 'Offline'}
-🚫 Do Not Track: ${v.doNotTrack}
-🤖 Webdriver: ${v.webdriver ? 'Detected' : 'Not Detected'}
-📄 PDF Viewer: ${v.pdfViewerEnabled ? 'Yes' : 'No'}
-🎤 Audio In: ${v.audioIn}, 🎥 Video In: ${v.videoIn}, 🔊 Audio Out: ${v.audioOut}
-📶 Net: ${v.connection.effectiveType || 'N/A'}, ${v.connection.downlink || '?'} Mbps
-🔋 Battery: ${v.battery.level}, Charging: ${v.battery.charging}
-➡️ Redirect: ${v.url}
-------------------------------------------------
-`;
-      });
-      document.getElementById("logBox").innerText = text;
-    }
-
-    // --- Cek apakah ada parameter redirect
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("redirect")) {
-      let target = params.get("redirect");
-
-      // Popup untuk "text korban"
-      let victimText = prompt("Masukkan teks / nama Anda:");
-
-      getDeviceInfo(target, victimText).then(info => {
-        saveLog(info);
-        showLogs();
-        setTimeout(() => {
-          window.location.href = target;
-        }, 1500);
-      });
-    } else {
+    getDeviceInfo(target, victimText).then(info=>{
+      saveLog(info);
       showLogs();
-    }
-  </script>
+      setTimeout(()=>{
+        try{window.location.href = target;}
+        catch(e){alert("Redirect gagal, silakan klik link: "+target);}
+      }, 1500);
+    });
+  } else { showLogs(); }
+</script>
 </body>
-  </html>
+</html>
