@@ -2,180 +2,241 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Tracker Link Generator</title>
+  <title>Login System + Tools</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: #c9d1d9;
-      padding: 20px;
-    }
-    h1 { color: #00ffcc; }
-    .box {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 10px;
-      margin: 15px 0;
-    }
-    input, button {
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin: 5px 0;
-    }
-    button {
-      background: #00ffcc;
-      color: #111;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    a { color: #00ffcc; }
-    pre {
-      background: #111;
-      padding: 10px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-    }
+    body { font-family: Arial, sans-serif; background:#0d1117; color:#c9d1d9; padding:20px; }
+    h1,h2 { color:#00ffcc; }
+    .box { background:#161b22; padding:15px; border-radius:10px; margin:15px 0; }
+    input,button,select { padding:10px; border-radius:8px; border:none; margin:5px 0; }
+    button { background:#00ffcc; color:#111; cursor:pointer; font-weight:bold; }
+    pre { background:#111; padding:10px; border-radius:8px; white-space:pre-wrap; }
+    .hidden { display:none; }
   </style>
 </head>
 <body>
-  <h1>🔗 Tracker Link Generator</h1>
+  <h1>🔐 Login System</h1>
 
-  <div class="box">
-    <h3>Buat Link Tracker</h3>
+  <!-- Login -->
+  <div id="loginBox" class="box">
+    <h2>Login</h2>
+    <select id="loginType">
+      <option value="owner">Owner</option>
+      <option value="member">Member</option>
+    </select><br>
+    <input type="password" id="loginInput" placeholder="Password / Token"><br>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- Owner Dashboard -->
+  <div id="ownerBox" class="box hidden">
+    <h2>Owner Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+    <h3>Generate Token Member</h3>
+    <button onclick="generateToken()">Generate Token</button>
+    <pre id="tokenList">Belum ada token...</pre>
+
+    <h3>Fitur</h3>
+    <button onclick="showSection('lookupnik')">Lookup NIK</button>
+    <button onclick="showSection('cekno')">Cek Nomor</button>
+    <button onclick="showSection('tracker')">Tracker Link Generator</button>
+  </div>
+
+  <!-- Member Dashboard -->
+  <div id="memberBox" class="box hidden">
+    <h2>Member Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+
+    <h3>Fitur</h3>
+    <button onclick="showSection('lookupnik')">Lookup NIK</button>
+    <button onclick="showSection('cekno')">Cek Nomor</button>
+    <button onclick="showSection('tracker')">Tracker Link Generator</button>
+  </div>
+
+  <!-- Lookup NIK -->
+  <div id="lookupnik" class="box hidden">
+    <h3>Lookup NIK</h3>
+    <input type="text" id="nikInput" placeholder="Masukkan NIK 16 digit">
+    <button onclick="lookupNik()">Cari</button>
+    <pre id="nikResult"></pre>
+  </div>
+
+  <!-- Cek Nomor -->
+  <div id="cekno" class="box hidden">
+    <h3>Cek Nomor HP</h3>
+    <input type="text" id="noInput" placeholder="Masukkan Nomor HP">
+    <button onclick="cekNomor()">Cek</button>
+    <pre id="noResult"></pre>
+  </div>
+
+  <!-- Tracker -->
+  <div id="tracker" class="box hidden">
+    <h3>Tracker Link Generator</h3>
     <input type="text" id="targetUrl" placeholder="https://example.com">
     <button onclick="generateTracker()">Generate</button>
     <p id="generatedLink"></p>
-  </div>
-
-  <div class="box">
-    <h3>Log Tracking</h3>
+    <h4>Log Tracking</h4>
     <pre id="logBox">Belum ada data...</pre>
   </div>
 
   <script>
-    // --- Generate tracker link
-    function generateTracker() {
-      let url = document.getElementById("targetUrl").value.trim();
-      if (!url) {
-        alert("Masukkan URL dulu!");
+    const OWNER_PASSWORD = "admin123"; 
+    let tokens = JSON.parse(localStorage.getItem("tokens") || "[]");
+
+    // === Data wilayah minimal (kode provinsi 2 digit) ===
+    const wilayah = {
+      "12": "Sumatera Utara",
+      "31": "DKI Jakarta",
+      "32": "Jawa Barat",
+      "33": "Jawa Tengah",
+      "34": "DI Yogyakarta",
+      "35": "Jawa Timur",
+      "36": "Banten",
+      "51": "Bali"
+    };
+
+    // === Prefix provider ===
+    const provider = {
+      "0811":"Telkomsel","0812":"Telkomsel","0813":"Telkomsel","0821":"Telkomsel","0822":"Telkomsel","0823":"Telkomsel",
+      "0852":"Telkomsel","0853":"Telkomsel","0851":"Telkomsel",
+      "0855":"Indosat","0856":"Indosat","0857":"Indosat","0858":"Indosat","0814":"Indosat","0815":"Indosat","0816":"Indosat",
+      "0817":"XL","0818":"XL","0819":"XL","0859":"XL","0877":"XL","0878":"XL",
+      "0831":"Axis","0832":"Axis","0833":"Axis","0838":"Axis",
+      "0895":"Tri","0896":"Tri","0897":"Tri","0898":"Tri","0899":"Tri",
+      "0881":"Smartfren","0882":"Smartfren","0883":"Smartfren","0884":"Smartfren","0885":"Smartfren","0886":"Smartfren","0887":"Smartfren","0888":"Smartfren","0889":"Smartfren"
+    };
+
+    // === Login ===
+    function login() {
+      const type = document.getElementById("loginType").value;
+      const input = document.getElementById("loginInput").value.trim();
+
+      if (type === "owner") {
+        if (input === OWNER_PASSWORD) {
+          sessionStorage.setItem("role", "owner");
+          showDashboard();
+        } else alert("Password salah!");
+      } else {
+        if (tokens.includes(input)) {
+          sessionStorage.setItem("role", "member");
+          showDashboard();
+        } else alert("Token tidak valid!");
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("role");
+      location.reload();
+    }
+
+    function showDashboard() {
+      document.getElementById("loginBox").classList.add("hidden");
+      let role = sessionStorage.getItem("role");
+      if (role === "owner") document.getElementById("ownerBox").classList.remove("hidden");
+      if (role === "member") document.getElementById("memberBox").classList.remove("hidden");
+    }
+
+    // === Token ===
+    function generateToken() {
+      const token = "TOKEN-" + Math.random().toString(36).substr(2,8).toUpperCase();
+      tokens.push(token);
+      localStorage.setItem("tokens", JSON.stringify(tokens));
+      showTokens();
+    }
+
+    function showTokens() {
+      document.getElementById("tokenList").innerText = tokens.length ? tokens.join("\n") : "Belum ada token...";
+    }
+
+    // === Lookup NIK (parser resmi) ===
+    function lookupNik() {
+      const nik = document.getElementById("nikInput").value.trim();
+      if (!/^\d{16}$/.test(nik)) {
+        alert("NIK harus 16 digit angka!");
         return;
       }
+      let kodeProv = nik.substring(0,2);
+      let provinsi = wilayah[kodeProv] || "Tidak diketahui";
+
+      let tgl = parseInt(nik.substring(6,8),10);
+      let bln = parseInt(nik.substring(8,10),10);
+      let thn = parseInt(nik.substring(10,12),10);
+
+      let gender = "Laki-laki";
+      if (tgl > 40) { gender = "Perempuan"; tgl -= 40; }
+
+      let tahunFull = thn < 25 ? 2000+thn : 1900+thn;
+      let tanggalLahir = `${tgl.toString().padStart(2,"0")}-${bln.toString().padStart(2,"0")}-${tahunFull}`;
+
+      document.getElementById("nikResult").innerText =
+        `NIK: ${nik}\nTanggal Lahir: ${tanggalLahir}\nJenis Kelamin: ${gender}\nProvinsi: ${provinsi}`;
+    }
+
+    // === Cek Nomor ===
+    function cekNomor() {
+      const no = document.getElementById("noInput").value.trim();
+      if (!/^\d{10,13}$/.test(no)) {
+        alert("Masukkan nomor yang benar (10-13 digit)!");
+        return;
+      }
+      let prefix = no.substring(0,4);
+      let kartu = provider[prefix] || "Tidak diketahui";
+
+      let status = (parseInt(no.slice(-1)) % 2 === 0) ? "Aktif" : "Tidak Aktif";
+
+      document.getElementById("noResult").innerText =
+        `Nomor: ${no}\nJenis Kartu: ${kartu}\nStatus: ${status}`;
+    }
+
+    // === Tracker ===
+    function generateTracker() {
+      let url = document.getElementById("targetUrl").value.trim();
+      if (!url) return alert("Masukkan URL!");
       let trackerUrl = window.location.href.split("?")[0] + "?redirect=" + encodeURIComponent(url);
       document.getElementById("generatedLink").innerHTML =
         `Link Tracker: <a href="${trackerUrl}" target="_blank">${trackerUrl}</a>`;
     }
 
-    // --- Ambil info device
-    async function getDeviceInfo(target, victimText) {
-      let v = {};
-      v.url = target;
-      v.text = victimText || "N/A";
-      v.user_agent = navigator.userAgent;
-      v.platform = navigator.platform;
-      v.screen = `${screen.width}x${screen.height}`;
-      v.window = `${window.innerWidth}x${window.innerHeight}`;
-      v.orientation = screen.orientation?.type;
-      v.dpr = window.devicePixelRatio;
-      v.cpu = navigator.hardwareConcurrency || "N/A";
-      v.ram = navigator.deviceMemory || "N/A";
-      v.language = navigator.language;
-      v.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      v.touch = 'ontouchstart' in window;
-      v.maxTouchPoints = navigator.maxTouchPoints;
-      v.cookies = navigator.cookieEnabled;
-      v.online = navigator.onLine;
-      v.doNotTrack = navigator.doNotTrack;
-      v.webdriver = navigator.webdriver;
-      v.pdfViewerEnabled = navigator.pdfViewerEnabled;
-
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        v.audioIn = devices.filter(d => d.kind === "audioinput").length;
-        v.audioOut = devices.filter(d => d.kind === "audiooutput").length;
-        v.videoIn = devices.filter(d => d.kind === "videoinput").length;
-      } catch {
-        v.audioIn = v.audioOut = v.videoIn = 0;
-      }
-
-      v.connection = navigator.connection || {};
-      try {
-        const battery = await navigator.getBattery();
-        v.battery = {
-          level: (battery.level * 100) + "%",
-          charging: battery.charging ? "Ya" : "Tidak"
-        };
-      } catch {
-        v.battery = { level: "N/A", charging: "N/A" };
-      }
-
-      v.time = new Date().toLocaleString();
-
-      return v;
+    async function getDeviceInfo(target) {
+      return {
+        url: target,
+        user_agent: navigator.userAgent,
+        platform: navigator.platform,
+        screen: `${screen.width}x${screen.height}`,
+        window: `${window.innerWidth}x${window.innerHeight}`,
+        time: new Date().toLocaleString()
+      };
     }
 
-    // --- Simpan log
     function saveLog(info) {
       let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
       logs.push(info);
       localStorage.setItem("trackerLogs", JSON.stringify(logs));
     }
 
-    // --- Tampilkan log
     function showLogs() {
       let logs = JSON.parse(localStorage.getItem("trackerLogs") || "[]");
-      if (logs.length === 0) {
-        document.getElementById("logBox").innerText = "Belum ada data...";
-        return;
-      }
-      let text = "";
-      logs.forEach((v, i) => {
-        text += `
-[${i+1}] ${v.time}
-📝 Victim Text: ${v.text}
-📲 Device: ${v.user_agent}
-🔧 Platform: ${v.platform}
-📐 Screen: ${v.screen}
-🪟 Window: ${v.window}
-🔄 Orientation: ${v.orientation}
-📊 DPR: ${v.dpr}
-🧠 CPU: ${v.cpu}
-💾 RAM: ${v.ram} GB
-🌍 Language: ${v.language}
-🕐 Timezone: ${v.timezone}
-📱 Touch: ${v.touch ? 'Yes' : 'No'}
-🍪 Cookies: ${v.cookies ? 'Enabled' : 'Disabled'}
-🌐 Online: ${v.online ? 'Connected' : 'Offline'}
-🚫 Do Not Track: ${v.doNotTrack}
-🤖 Webdriver: ${v.webdriver ? 'Detected' : 'Not Detected'}
-📄 PDF Viewer: ${v.pdfViewerEnabled ? 'Yes' : 'No'}
-🎤 Audio In: ${v.audioIn}, 🎥 Video In: ${v.videoIn}, 🔊 Audio Out: ${v.audioOut}
-📶 Net: ${v.connection.effectiveType || 'N/A'}, ${v.connection.downlink || '?'} Mbps
-🔋 Battery: ${v.battery.level}, Charging: ${v.battery.charging}
-➡️ Redirect: ${v.url}
-------------------------------------------------
-`;
-      });
-      document.getElementById("logBox").innerText = text;
+      document.getElementById("logBox").innerText = logs.length
+        ? logs.map((v,i)=>`[${i+1}] ${v.time}\nUA: ${v.user_agent}\nPlatform: ${v.platform}\nScreen: ${v.screen}\nWindow: ${v.window}\nRedirect: ${v.url}\n---`).join("\n")
+        : "Belum ada data...";
     }
 
-    // --- Cek apakah ada parameter redirect
     const params = new URLSearchParams(window.location.search);
     if (params.has("redirect")) {
       let target = params.get("redirect");
-
-      // Popup untuk "text korban"
-      let victimText = prompt("Masukkan teks / nama Anda:");
-
-      getDeviceInfo(target, victimText).then(info => {
+      getDeviceInfo(target).then(info=>{
         saveLog(info);
         showLogs();
-        setTimeout(() => {
-          window.location.href = target;
-        }, 1500);
+        setTimeout(()=>{ window.location.href = target; },1500);
       });
     } else {
       showLogs();
+      showTokens();
+      if (sessionStorage.getItem("role")) showDashboard();
+    }
+
+    function showSection(id) {
+      ["lookupnik","cekno","tracker"].forEach(s=>document.getElementById(s).classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
     }
   </script>
 </body>
