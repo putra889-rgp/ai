@@ -1,0 +1,7 @@
+body{background:#0d1117;color:#c9d1d9;font-family:Arial,sans-serif;padding:20px;}
+h1,h2{color:#58a6ff;}
+input,button{padding:5px;margin:5px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #30363d;padding:5px;text-align:center;}
+button{background:#238636;color:#fff;border:none;border-radius:5px;cursor:pointer;}
+button:hover{background:#2ea043;}
